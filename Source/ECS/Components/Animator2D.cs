@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Managers;
+using ScrapBox.SMath;
 
 namespace ScrapBox.ECS.Components
 {
@@ -14,6 +15,8 @@ namespace ScrapBox.ECS.Components
 		public bool IsAwake { get; set; }
 		
 		public Sprite2D Sprite { get; set; }
+
+		public Rectangle CurrentCell { get { return cells[currentColumn, currentRow]; } }
 
 		public int Columns { get; set; }
 		public int Rows { get; set; }
@@ -121,7 +124,8 @@ namespace ScrapBox.ECS.Components
 			if (!IsAwake)
 				return;
 
-			Renderer2D.RenderSprite(Sprite.Texture, Sprite.Transform.Position, Sprite.Transform.Dimensions, Sprite.Transform.Rotation, cells[currentColumn, currentRow], 
+			Renderer2D.RenderSprite(Sprite.Texture, Sprite.Transform.Position, 
+					Sprite.Transform.Dimensions, Sprite.Transform.Rotation, cells[currentColumn, currentRow], 
 					Sprite.TintColor, Sprite.Effects);
 		}
 	}

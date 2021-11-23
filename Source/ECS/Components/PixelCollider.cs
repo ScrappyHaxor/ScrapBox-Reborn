@@ -8,15 +8,16 @@ using System;
 
 namespace ScrapBox.ECS.Components
 {
-	public class BoxCollider2D : ICollider
+	public class PixelCollider : ICollider
 	{
 		public Entity Owner { get; set; }
 		public bool IsAwake { get; set; }
-		
+
 		public Transform Transform { get; set; }
-		public Sprite2D Sprite { get; set; }
 		public RigidBody2D RigidBody { get; set; }
 		public ScrapVector Dimensions { get; set; }
+		public Sprite2D Sprite { get; set; }
+		
 		public ICollider.ColliderType TypeOfCollider { get; set; }
 
 		public double Top { get { return Transform.Position.Y - Dimensions.Y / 2; } }
@@ -27,30 +28,43 @@ namespace ScrapBox.ECS.Components
 		public virtual ScrapVector[] GetVerticies()
 		{
 			ScrapVector[] verts = new ScrapVector[4];
-			verts[0] = ScrapMath.RotatePoint(new ScrapVector(Right, Top), Transform.Position, Transform.Rotation);
-			verts[1] = ScrapMath.RotatePoint(new ScrapVector(Right, Bottom), Transform.Position, Transform.Rotation);
-			verts[2] = ScrapMath.RotatePoint(new ScrapVector(Left, Bottom), Transform.Position, Transform.Rotation);
-			verts[3] = ScrapMath.RotatePoint(new ScrapVector(Left, Top), Transform.Position, Transform.Rotation);
+			verts[0] = ScrapMath.RotatePoint(new ScrapVector(Left, Top), Transform.Position, Transform.Rotation);
+			verts[1] = ScrapMath.RotatePoint(new ScrapVector(Right, Top), Transform.Position, Transform.Rotation);
+			verts[2] = ScrapMath.RotatePoint(new ScrapVector(Right, Bottom), Transform.Position, Transform.Rotation);
+			verts[3] = ScrapMath.RotatePoint(new ScrapVector(Left, Bottom), Transform.Position, Transform.Rotation);
 
 			return verts;
 		}
 
 		public virtual void Awake()
 		{
-			TypeOfCollider = ICollider.ColliderType.SAT;
+			TypeOfCollider = ICollider.ColliderType.PIXEL_PERFECT_SAT;
 			Transform = Owner.GetComponent<Transform>();
 			if (Transform == null)
 			{
-				LogManager.Log(new LogMessage("BoxCollider2D", "Missing dependency. Requires transform component to work.", LogMessage.Severity.ERROR));
+				LogManager.Log(new LogMessage("PixelCollider", "Missing dependency. Requires transform component to work.", LogMessage.Severity.ERROR));
 				return;
 			}
 
 			if (!Transform.IsAwake)
 			{
-				LogManager.Log(new LogMessage("BoxCollider2D", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
+				LogManager.Log(new LogMessage("PixelCollider", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
 				return;
 			}
 
+			Sprite = Owner.GetComponent<Sprite2D>();
+			if (Sprite == null)
+			{
+				LogManager.Log(new LogMessage("PixelCollider", "Missing dependency. Requires Sprite2D component to work.", LogMessage.Severity.ERROR));
+				return;
+			}
+
+			if (!Sprite.IsAwake)
+			{
+				LogManager.Log(new LogMessage("PixelCollider", "Sprite2D component is not awake... Aborting...", LogMessage.Severity.ERROR));
+				return;
+			}
+			
 			Sprite = Owner.GetComponent<Sprite2D>();
 			RigidBody = Owner.GetComponent<RigidBody2D>();
 
@@ -68,6 +82,8 @@ namespace ScrapBox.ECS.Components
 		{
 			if (!IsAwake)
 				return;
+			
+			//Renderer2D.RenderPrimitiveHitbox(Transform.Position, Dimensions, Transform.Rotation, Color.Red);
 
 			Renderer2D.RenderPrimitiveHitbox(ScrapMath.RotatePoint(new ScrapVector(Right, Top), Transform.Position, Transform.Rotation), 
 					new ScrapVector(2, 2), 0, Color.Blue);
@@ -76,7 +92,7 @@ namespace ScrapBox.ECS.Components
 			Renderer2D.RenderPrimitiveHitbox(ScrapMath.RotatePoint(new ScrapVector(Right, Bottom), Transform.Position, Transform.Rotation), 
 					new ScrapVector(2, 2), 0, Color.Blue);
 			Renderer2D.RenderPrimitiveHitbox(ScrapMath.RotatePoint(new ScrapVector(Left, Top), Transform.Position, Transform.Rotation), 
-					new ScrapVector(2, 2), 0, Color.Blue);
+					new ScrapVector(2, 2), 0, Color.Blue);	
 		}
 	}
 }

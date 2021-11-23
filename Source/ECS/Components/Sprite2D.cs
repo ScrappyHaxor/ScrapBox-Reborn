@@ -38,7 +38,7 @@ namespace ScrapBox.ECS.Components
 				LogManager.Log(new LogMessage("Sprite2D", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
 				return;
 			}
-
+			
 			animatorAttached = Owner.HasComponent<Animator2D>();
 
 			IsAwake = true;

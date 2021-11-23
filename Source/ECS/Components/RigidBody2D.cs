@@ -1,36 +1,80 @@
+using System.Collections.Generic;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Managers;
+using ScrapBox.SMath;
 
 using System;
+
 
 namespace ScrapBox.ECS.Components
 {
 	public class RigidBody2D : IComponent
 	{
+		public enum RigidState
+		{
+			REST,
+			APPLYING_FORCE
+		}
+
 		public Entity Owner { get; set; }
 		public bool IsAwake { get; set; }
 
 		public Transform Transform { get; set; }
 
-		public Vector2 Velocity { get; set; }
-		public Vector2 Force { get; set; }
+		public RigidState State { get; set; }
+		public ScrapVector Velocity { get; set; }
 		public float Mass { get; set; }
 
-		public Vector2 LinearVelocity { get; set; }
+		public List<ScrapVector> Forces { get; internal set; }
+
+		public float InverseMass { get { if (IsStatic) { return 0; } return 1 / Mass; } }
+
+		public ScrapVector LinearVelocity { get; set; }
+		public ScrapVector AngularVelocity { get; set; }
 		public float Density { get; set; }
 		public float Restitution { get; set; }
 		public bool IsStatic { get; set; }
+		public float Friction { get; set; }
 		
 		public RigidBody2D()
 		{
-
+			Forces = new List<ScrapVector>();
+			State = RigidState.APPLYING_FORCE;
 		}
 		
-		public virtual void AddForce(Vector2 force)
+		public virtual void AddForce(ScrapVector force)
 		{
-			Force += force;
+			Forces.Add(force);
+			State = RigidState.APPLYING_FORCE;
+		}
+
+		internal virtual void ApplyForces(GameTime gameTime)
+		{
+			if (!IsAwake)
+				return;
+
+			ScrapVector acceleration = ScrapVector.Zero;
+			foreach (ScrapVector force in Forces)
+			{
+				acceleration += force / Mass;
+			}
+
+			acceleration += Physics2D.Gravity / Mass;
+
+			Velocity += acceleration * gameTime.ElapsedGameTime.TotalSeconds;
+
+			Forces.Clear();
+		}
+
+		internal virtual void ApplyVelocities(GameTime gameTime)
+		{
+			if (!IsAwake)
+				return;
+
+			Transform.Position += Velocity * gameTime.ElapsedGameTime.TotalSeconds;
 		}
 
 		public virtual void Awake()
@@ -48,8 +92,8 @@ namespace ScrapBox.ECS.Components
 				return;
 			}
 
-			if (Mass == 0)
-				LogManager.Log(new LogMessage("RigidBody2D", "Mass is 0. This will cause unexpected behaviour", LogMessage.Severity.WARNING));
+			if (Mass == 0 && !IsStatic)
+				LogManager.Log(new LogMessage("RigidBody2D", "Mass is 0 on dynamic body. This will cause unexpected behaviour", LogMessage.Severity.WARNING));
 
 			IsAwake = true;
 		}
@@ -58,12 +102,6 @@ namespace ScrapBox.ECS.Components
 		{
 			if (!IsAwake)
 				return;
-
-			Force += Physics2D.Gravity * Mass;
-			Velocity += Force / Mass * (float)gameTime.TotalGameTime.TotalSeconds;
-			Transform.Position += Velocity * (float)gameTime.TotalGameTime.TotalSeconds;
-
-			Force = Vector2.Zero;
 		}
 
 		public virtual void Draw(SpriteBatch spriteBatch)

@@ -1,6 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+using ScrapBox.SMath;
+
 namespace ScrapBox.ECS.Components
 {
 	public class Transform : IComponent
@@ -8,8 +10,8 @@ namespace ScrapBox.ECS.Components
 		public virtual Entity Owner { get; set; }
 		public virtual bool IsAwake { get; set; }
 
-		public Vector2 Position { get; set; }
-		public Vector2 Dimensions { get; set; }
+		public ScrapVector Position { get; set; }
+		public ScrapVector Dimensions { get; set; }
 		public float Depth { get; set; }
 		public float Rotation { get; set; }
 		

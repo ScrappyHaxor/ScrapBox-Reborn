@@ -1,35 +1,73 @@
+using System;
+
 using Microsoft.Xna.Framework;
 
-namespace ScrapBox.Math
+namespace ScrapBox.SMath
 {
 	public static class ScrapMath
 	{
-		public static float Length(Vector2 v)
+		public static double Length(ScrapVector v)
 		{
-			return (float)System.Math.Sqrt(v.X * v.X + v.Y * v.Y);
+			return System.Math.Sqrt(v.X * v.X + v.Y * v.Y);
 		}
 
-		public static float Distance(Vector2 a, Vector2 b)
+		public static double Distance(ScrapVector a, ScrapVector b)
 		{
-			Vector2 delta = a - b;
+			ScrapVector delta = a - b;
 			return Length(delta);
 		}
 
-		public static Vector2 Normalize(Vector2 v)
+		public static ScrapVector Normalize(ScrapVector v)
 		{
-			float length = Length(v);
+			double length = Length(v);
 			v /= length;
 			return v;
 		}
 
-		public static float Dot(Vector2 a, Vector2 b)
+		public static double Dot(ScrapVector a, ScrapVector b)
 		{
 			return a.X * b.X + a.Y * b.Y;
 		}
 
-		public static float Cross(Vector2 a, Vector2 b)
+		public static double Cross(ScrapVector a, ScrapVector b)
 		{
 			return a.X * b.Y - a.Y * b.X;
+		}
+
+		public static ScrapVector RotatePoint(ScrapVector p, ScrapVector o, float theta)
+		{
+			return new ScrapVector(
+					Math.Cos(theta) * (p.X - o.X) - Math.Sin(theta) * (p.Y-o.Y) + o.X,
+					Math.Sin(theta) * (p.X - o.X) + Math.Cos(theta) * (p.Y-o.Y) + o.Y);
+		}
+
+        public static void ProjectVerticies(ScrapVector[] verts, ScrapVector axis, out double min, out double max)
+        {
+            min = float.MaxValue;
+            max = float.MinValue;
+
+            for (int i = 0; i < verts.Length; i ++)
+            {
+                ScrapVector v = verts[i];
+                double projection = ScrapMath.Dot(v, axis);
+                
+                if (projection < min)
+                    min = projection;
+                
+                if (projection > max)
+                    max = projection;
+            }
+        }
+
+		public static ScrapVector FindArithmeticMean(ScrapVector[] verts)
+		{
+			ScrapVector sum = ScrapVector.Zero;
+			foreach (ScrapVector vert in verts)
+			{
+				sum += vert;
+			}
+
+			return sum / verts.Length;
 		}
 	}
 }
