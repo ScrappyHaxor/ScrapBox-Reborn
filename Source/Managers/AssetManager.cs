@@ -25,15 +25,15 @@ namespace ScrapBox.Managers
         {
             LogManager.Log(new LogMessage("AssetManager", $"Begun loading resource file {name}.sResource.", LogMessage.Severity.VERBOSE));
 
-             if (!File.Exists($"{Environment.CurrentDirectory}/{name}.sResource"))
+             if (!File.Exists($"{name}.sResource"))
              {
-                 LogManager.Log(new LogMessage("AssetManager", $"Resource file at: {Environment.CurrentDirectory}/{name}.sResource could not be found.", 
+                 LogManager.Log(new LogMessage("AssetManager", $"Resource file at: {name}.sResource could not be found.", 
                              LogMessage.Severity.CRITICAL));
                  return;
              }
 
              int entryNumber = 0;
-             string[] buffer = File.ReadAllLines($"{Environment.CurrentDirectory}/{name}.sResource");
+             string[] buffer = File.ReadAllLines($"{name}.sResource");
              foreach (string line in buffer)
              {
                  entryNumber++;

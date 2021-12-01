@@ -2,19 +2,31 @@ using Microsoft.Xna.Framework;
 
 namespace ScrapBox.SMath
 {
-	//Wanted my own hyperfast lightweight implementation - Scrappy (Hampus H)
 	public readonly struct ScrapVector
 	{
-		public static readonly ScrapVector Zero = new ScrapVector(0f, 0f);
+		public static readonly ScrapVector Zero = new ScrapVector(0, 0);
+		public static readonly ScrapVector One = new ScrapVector(1, 1);
 
 		public readonly double X;
 		public readonly double Y;
 		
+		public ScrapVector(double x)
+		{
+			X = x;
+			Y = x;
+		}
+
 		public ScrapVector(double x, double y)
 		{
 			X = x;
 			Y = y;
 		}
+
+		public ScrapVector(Vector2 v)
+        {
+			X = v.X;
+			Y = v.Y;
+        }
 
 		public static ScrapVector operator+(ScrapVector a, ScrapVector b)
 		{
@@ -96,5 +108,10 @@ namespace ScrapBox.SMath
 		{
 			return $"{X}, {Y}";
 		}
+
+		public static ScrapVector Transform(ScrapVector position, Matrix matrix)
+		{
+			return new ScrapVector((position.X * matrix.M11) + (position.Y * matrix.M21) + matrix.M41, (position.X * matrix.M12) + (position.Y * matrix.M22) + matrix.M42);
+		}	
 	}
 }

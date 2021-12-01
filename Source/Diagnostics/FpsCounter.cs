@@ -8,9 +8,7 @@ namespace ScrapBox.Diagnostics
 {
 	public class FpsCounter
 	{
-		public int TotalFrames { get; internal set; }
-		public double ElapsedTime { get; internal set; }
-		public int Fps { get; internal set; }
+		public double Fps { get; internal set; }
 
 		public SpriteFont debugFont { get; set; }
 
@@ -20,21 +18,14 @@ namespace ScrapBox.Diagnostics
 			this.debugFont = debugFont;
 		}
 
-		public void Update(GameTime gameTime)
+		public void Update(double dt)
 		{
-			TotalFrames++;
-			ElapsedTime += gameTime.ElapsedGameTime.TotalMilliseconds;
-
-			if (ElapsedTime >= 1000)
-			{
-				Fps = TotalFrames;
-				TotalFrames = 0;
-				ElapsedTime = 0;
-			}
+			
 		}
 
-		public void Draw(SpriteBatch spriteBatch)
+		public void Draw(SpriteBatch spriteBatch, double dt)
 		{
+			Fps = 1 / dt;
 			if (debugFont == null)
 				return;
 

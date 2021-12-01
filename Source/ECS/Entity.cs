@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.ECS.Components;
 using ScrapBox.Managers;
+using ScrapBox.Scene;
 
 namespace ScrapBox.ECS
 {
@@ -58,23 +59,23 @@ namespace ScrapBox.ECS
 			IsAwake = true;
 		}
 
-		public virtual void Update(GameTime gameTime) 
+		public virtual void Update(double dt) 
 		{ 
 			if (!IsAwake) return;
 
 			foreach (IComponent component in componentRegister)
 			{
-				component.Update(gameTime);
+				component.Update(dt);
 			}
 		}
 
-		public virtual void Draw(SpriteBatch spriteBatch) 
+		public virtual void Draw(SpriteBatch spriteBatch, Camera camera) 
 		{ 
 			if (!IsAwake) return; 
 
 			foreach (IComponent component in componentRegister)
 			{
-				component.Draw(spriteBatch);
+				component.Draw(spriteBatch, camera);
 			}
 		} 
 	}

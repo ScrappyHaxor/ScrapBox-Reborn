@@ -1,36 +1,60 @@
 using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.ECS;
 using ScrapBox.ECS.Components;
 using ScrapBox.SMath;
 using ScrapBox.Utils;
+using ScrapBox.Args;
 
 using System;
+using System.Diagnostics;
 
 namespace ScrapBox.Managers
 {
     public static class Physics2D
     {
-        public const float MAX_ITERATIONS = 6;
+        public const float MAX_ITERATIONS = 20;
+        public const float MAX_IMPULSE_ITERATIONS = 1;
 
         public static ScrapVector Gravity = new ScrapVector(0, 9.14) * 100;
-        public static float AirFriction = 0.5f;
 
-        internal static List<ICollider> Colliders;
+        public static List<ICollider> GetDynamicBodies { get { return DynamicBodies; } }
+        public static List<ICollider> GetStaticBodies { get { return StaticBodies; } }
+
+        internal static List<ICollider> DynamicBodies;
+        internal static List<ICollider> StaticBodies;
 
         internal static List<RigidBody2D> CollidingBodiesA;
         internal static List<RigidBody2D> CollidingBodiesB;
 
         internal static List<CollisionManifold> Manifolds;
 
+        internal static Stopwatch watch;
+
         static Physics2D()
         {
-            Colliders = new List<ICollider>();
+            DynamicBodies = new List<ICollider>();
+            StaticBodies = new List<ICollider>();
+
             CollidingBodiesA = new List<RigidBody2D>();
             CollidingBodiesB = new List<RigidBody2D>();
             Manifolds = new List<CollisionManifold>();
+
+            watch = new Stopwatch();
+        }
+
+        internal static ScrapVector[] CreateMicroRectangle(ScrapVector position)
+        {
+            List<ScrapVector> verts = new List<ScrapVector>();
+            verts.Add(position + -ScrapVector.One);
+            verts.Add(position + new ScrapVector(1, -1));
+            verts.Add(position + ScrapVector.One);
+            verts.Add(position + new ScrapVector(-1, 1));
+
+            return verts.ToArray();
         }
 
         //SAT prototype
@@ -111,6 +135,11 @@ namespace ScrapBox.Managers
             return true;
         }
 
+        public static bool IntersectPoint(ScrapVector v, ScrapVector[] verts)
+        {
+            return IntersectPolygons(CreateMicroRectangle(v), verts, out CollisionManifold _);
+        }
+
         public static bool IntersectPixels(ICollider colliderA, ICollider colliderB, 
                 Animator2D animatorA = null, Animator2D animatorB = null)
         {
@@ -132,27 +161,15 @@ namespace ScrapBox.Managers
             {
                 for (int x = (int)left; x < (int)right; x++)
                 {
-                    Color pixelA;
-                    if (animatorA != null)
-                    {
-                        pixelA = pixelDataA[(x - (int)colliderA.Left+animatorA.CurrentCell.Left) + (y - (int)colliderA.Top+animatorA.CurrentCell.Top) 
-                            * (int)colliderA.Sprite.Texture.Width];
-                    }
-                    else
-                    {
-                        pixelA = pixelDataA[(x - (int)colliderA.Left) + (y - (int)colliderA.Top) * (int)colliderA.Sprite.Texture.Width];
-                    }
+                    Color pixelA = pixelDataA[
+                        (int)((x - colliderA.Left+colliderA.Sprite.SourceRectangle.Left)) + 
+                        (int)((y - colliderA.Top+colliderA.Sprite.SourceRectangle.Top)) *
+                        colliderA.Sprite.Texture.Width];
 
-                    Color pixelB;
-                    if (animatorB != null)
-                    {
-                        pixelB = pixelDataB[(x - (int)colliderB.Left+animatorB.CurrentCell.Left) + (y - (int)colliderB.Top+animatorB.CurrentCell.Top) 
-                            * (int)colliderB.Sprite.Texture.Width];
-                    }
-                    else
-                    {
-                        pixelB = pixelDataB[(x - (int)colliderB.Left) + (y - (int)colliderB.Top) * (int)colliderB.Sprite.Texture.Width];
-                    }
+                    Color pixelB = pixelDataB[
+                        (int)((x - colliderB.Left+colliderB.Sprite.SourceRectangle.Left)) + 
+                        (int)((y - colliderB.Top+colliderB.Sprite.SourceRectangle.Top)) *
+                            colliderB.Sprite.Texture.Width];
 
                     if (pixelA.A != 0 && pixelB.A != 0)
                         return true;
@@ -162,9 +179,9 @@ namespace ScrapBox.Managers
             return false;
         }
 
-        public static void ResolveImpulse(RigidBody2D a, RigidBody2D b, CollisionManifold manifold, GameTime gameTime)
+        public static void ResolveImpulse(RigidBody2D a, RigidBody2D b, CollisionManifold manifold)
         {
-            ScrapVector relativeVelocity = b.Velocity - a.Velocity;
+            ScrapVector relativeVelocity = b.LinearVelocity - a.LinearVelocity;
 
             if (ScrapMath.Dot(relativeVelocity, manifold.Normal) > 0)
                 return;
@@ -172,82 +189,129 @@ namespace ScrapBox.Managers
             double j = -(1 + a.Restitution) * ScrapMath.Dot(relativeVelocity, manifold.Normal);
             j /= a.InverseMass + b.InverseMass;
 
-            double percent = 0.05f;
-            double slop = 0.01f;
-            ScrapVector correct = Math.Max(manifold.Depth - slop, 0.0) / (a.InverseMass + b.InverseMass) * percent * manifold.Normal;
+            double percent = 0.5;
+            ScrapVector correct = manifold.Depth / (a.InverseMass + b.InverseMass) * percent * manifold.Normal;
 
-            if (!a.IsStatic)
+            if (!a.IsStatic && !a.Kinematic)
             {
-                a.Transform.Position -= a.InverseMass * correct;
-            }
-            
-            if (!b.IsStatic)
-            {
-                b.Transform.Position += b.InverseMass * correct;
+                a.Transform.Position -= a.InverseMass * correct;      
             }
 
-            
-            a.Velocity -= manifold.Normal * j * a.InverseMass;
-            b.Velocity += manifold.Normal * j * b.InverseMass;
+            if (!b.IsStatic && !b.Kinematic)
+            {
+                b.Transform.Position += b.InverseMass * correct;    
+            }
+
+            a.LinearVelocity -= manifold.Normal * j * a.InverseMass;
+            b.LinearVelocity += manifold.Normal * j * b.InverseMass;
         }
 
-        internal static void Update(GameTime gameTime)
+        internal static void Update(double dt)
         {
+            watch.Restart();
             CollidingBodiesA.Clear();
             CollidingBodiesB.Clear();
             Manifolds.Clear();
 
-            //Detect colllisions
-            for (int i = 0; i < Colliders.Count; i++)
+            //Detect colllisions and apply rigidbody states for dynamic versus static
+            foreach (ICollider dynamicB in DynamicBodies)
             {
-                if (Colliders[i].RigidBody.IsStatic)
-                    continue;
-
-                for (int j = 0; j < Colliders.Count; j++)
+                RigidBody2D.RigidState state = RigidBody2D.RigidState.FALLING;
+                foreach (ICollider staticB in StaticBodies)
                 {
-                    if (i == j)
-                        continue;
-                    
-                    if (IntersectPolygons(Colliders[i].GetVerticies(), Colliders[j].GetVerticies(), out CollisionManifold manifold))
+                    if (!dynamicB.IsAwake || !staticB.IsAwake)
+                        return;
+
+                    if (IntersectPolygons(dynamicB.GetVerticies(), staticB.GetVerticies(), out CollisionManifold manifold))
                     {
-                        if (!IntersectPixels(Colliders[i], Colliders[j])) continue;
-                        CollidingBodiesA.Add(Colliders[i].RigidBody);
-                        CollidingBodiesB.Add(Colliders[j].RigidBody);
+                        if (staticB.Trigger != ICollider.TriggerType.NONE)
+                        {
+                            staticB.Triggered?.Invoke(null, new TriggerArgs(dynamicB));
+
+                            if (staticB.Trigger == ICollider.TriggerType.TRIGGER_ONLY)
+                                continue;
+                        }
+
+                        if (staticB.Trigger != ICollider.TriggerType.TRIGGER_ONLY &&
+                                IntersectPoint(new ScrapVector(dynamicB.Transform.Position.X, dynamicB.Bottom), staticB.GetVerticies()))
+                        {
+                            state = RigidBody2D.RigidState.REST_STATIC;
+                        }
+
+                        CollidingBodiesA.Add(dynamicB.RigidBody);
+                        CollidingBodiesB.Add(staticB.RigidBody);
 
                         Manifolds.Add(manifold);
                     }
                 }
+
+                dynamicB.RigidBody.State = state;
+            }
+
+            //Detect collisions and apply rigidbody states for dynamic versus dynamic
+            for (int i = 0; i < DynamicBodies.Count; i++)
+            {
+                RigidBody2D.RigidState state = DynamicBodies[i].RigidBody.State;
+                for (int j = 0; j < DynamicBodies.Count; j++)
+                {
+                    if (i == j) continue;
+
+                    if (!DynamicBodies[i].IsAwake || !DynamicBodies[j].IsAwake)
+                        return;
+
+                    if (IntersectPolygons(DynamicBodies[i].GetVerticies(), DynamicBodies[j].GetVerticies(), out CollisionManifold manifold) && 
+                            IntersectPixels(DynamicBodies[i], DynamicBodies[j]))
+                    {
+                        if (DynamicBodies[j].Trigger != ICollider.TriggerType.TRIGGER_ONLY &&
+                            IntersectPoint(new ScrapVector(DynamicBodies[i].Transform.Position.X, DynamicBodies[i].Bottom), DynamicBodies[j].GetVerticies()))
+                        {
+                            state = RigidBody2D.RigidState.REST_DYNAMIC;
+                        }
+
+                        if (DynamicBodies[i].Trigger != ICollider.TriggerType.NONE)
+                        {
+                            DynamicBodies[i].Triggered?.Invoke(null, new TriggerArgs(DynamicBodies[j]));
+                            if (DynamicBodies[i].Trigger == ICollider.TriggerType.TRIGGER_ONLY)
+                                continue;
+                        }
+
+                        if (DynamicBodies[j].Trigger != ICollider.TriggerType.NONE)
+                        {
+                            DynamicBodies[j].Triggered?.Invoke(null, new TriggerArgs(DynamicBodies[i]));
+                            if (DynamicBodies[j].Trigger == ICollider.TriggerType.TRIGGER_ONLY)
+                                continue;
+                        }
+
+                        CollidingBodiesA.Add(DynamicBodies[i].RigidBody);
+                        CollidingBodiesB.Add(DynamicBodies[j].RigidBody);
+
+                        Manifolds.Add(manifold);
+                    }
+                }
+
+                DynamicBodies[i].RigidBody.State = state;
             }
 
 
             //Apply forces
-            foreach (ICollider collider in Colliders)
+            foreach (ICollider collider in DynamicBodies)
             {
-                if (collider.RigidBody.IsStatic)
+                if (collider.RigidBody.IsStatic || collider.RigidBody.Kinematic)
                     continue;
 
-                collider.RigidBody.ApplyForces(gameTime);
+                collider.RigidBody.ApplyForces(dt, 1);
             }
 
-            //Apply velocities
-            foreach (ICollider collider in Colliders)
+            for (int i = 0; i < Manifolds.Count; i++)
             {
-                if (collider.RigidBody.IsStatic)
-                    continue;
-
-                collider.RigidBody.ApplyVelocities(gameTime);
-            }
-
-            //Iterative impulse resolution
-            for (int k = 0; k < MAX_ITERATIONS; k++)
-            {
-                for (int i = 0; i < Manifolds.Count; i++)
+                for (int j = 0; j < MAX_IMPULSE_ITERATIONS; j++)
                 {
-
-                    ResolveImpulse(CollidingBodiesA[i], CollidingBodiesB[i], Manifolds[i], gameTime);
+                    ResolveImpulse(CollidingBodiesA[i], CollidingBodiesB[i], Manifolds[i]);
                 }
+    
             }
-        }
 
+            watch.Stop();
+        }
     }
 }

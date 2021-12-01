@@ -1,6 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+using ScrapBox.Scene;
+
 namespace ScrapBox.ECS.Components
 {
 	public interface IComponent
@@ -9,8 +11,8 @@ namespace ScrapBox.ECS.Components
 		public bool IsAwake { get; set; }
 
 		public void Awake();
-		public void Update(GameTime gameTime);
-		public void Draw(SpriteBatch spriteBatch);
+		public void Update(double dt);
+		public void Draw(SpriteBatch spriteBatch, Camera camera);
 		
 	}
 }

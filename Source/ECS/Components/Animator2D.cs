@@ -1,59 +1,86 @@
 using System;
 using System.Timers;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Managers;
 using ScrapBox.SMath;
+using ScrapBox.Scene;
+using ScrapBox.Utils;
+using ScrapBox.Args;
 
 namespace ScrapBox.ECS.Components
 {
 	public class Animator2D : IComponent
 	{
+		public EventHandler<AnimatorFinishedArgs> Finished { get; set; }
+
 		public Entity Owner { get; set; }
 		public bool IsAwake { get; set; }
 		
 		public Sprite2D Sprite { get; set; }
 
-		public Rectangle CurrentCell { get { return cells[currentColumn, currentRow]; } }
+		public bool Playing { get { return enabled; } }
 
-		public int Columns { get; set; }
-		public int Rows { get; set; }
-		public int ColumnOffset { get; set; }
-		public int RowOffset { get; set; }
-		public float Threshold { get; set; }
 		public (int, int) CellSize { get; set; }
 
 		private Timer cycleTimer;
+		protected bool enabled;
+		private AnimationClip clip;
 		private Rectangle[,] cells;
 		private int currentColumn;
 		private int currentRow;
+
+		private Dictionary<string, AnimationClip> Clips;
 
 		public Animator2D()
 			: base()
 		{
 			cycleTimer = new Timer();
 			cycleTimer.Elapsed += CycleAnimation;
+			Clips = new Dictionary<string, AnimationClip>();
 		}
 
-		protected virtual void ReadAnimation()
+		public virtual void RegisterClip(string name, AnimationClip clip)
+        {
+			clip.Name = name;
+			Clips.Add(name, clip);
+        }
+
+		public virtual void SwapClip(string name)
+        {
+			ResetAnimation();
+			clip = Clips.GetValueOrDefault(name);
+			cycleTimer.Interval = clip.Speed;
+        }
+
+		public virtual bool ClipLoaded(string name)
+        {
+			return name == clip.Name;
+        }
+
+		protected virtual void ReadSheet()
 		{
-			cells = new Rectangle[Columns, Rows];
-			cycleTimer.Interval = Threshold;
+			int MaxColumns = Sprite.Texture.Width / CellSize.Item1;
+			int MaxRows = Sprite.Texture.Height / CellSize.Item2;
+
+			cells = new Rectangle[MaxColumns, MaxRows];
 
 			int currentColumnIndex = 0;
 			int currentRowIndex = 0;
-			while (currentRowIndex < Rows)
+			while (currentRowIndex < MaxRows)
 			{
 				cells[currentColumnIndex, currentRowIndex] = 
 					new Rectangle(
-					(currentColumnIndex + ColumnOffset) * CellSize.Item1,
-					(currentRowIndex + RowOffset) * CellSize.Item2, CellSize.Item1, CellSize.Item2);
+					currentColumnIndex * CellSize.Item1,
+					currentRowIndex * CellSize.Item2, 
+					CellSize.Item1, CellSize.Item2);
 
 				currentColumnIndex++;
 
-				if (currentColumnIndex == Columns)
+				if (currentColumnIndex == MaxColumns)
 				{
 					currentColumnIndex = 0;
 					currentRowIndex++;
@@ -64,26 +91,36 @@ namespace ScrapBox.ECS.Components
 		protected virtual void CycleAnimation(object o, EventArgs e)
 		{
 			currentColumn++;
-			if (currentColumn == Columns)
+			if (currentColumn == clip.Columns)
 			{
 				currentColumn = 0;
 				currentRow++;
 			}
 
-			if (currentRow == Rows)
+			if (currentRow == clip.Rows)
 			{
+				if (!clip.Looped)
+                {
+					cycleTimer.Stop();
+					currentColumn = clip.Columns-1;
+					enabled = false;
+					Finished?.Invoke(this, new AnimatorFinishedArgs(clip.Name));
+                }
+
 				currentRow = 0;
 			}
 		}
 
 		public virtual void StartAnimating()
 		{
+			enabled = true;
 			CycleAnimation(null, null);
 			cycleTimer.Start();
 		}
 
 		public virtual void StopAnimating()
 		{
+			enabled = false;
 			cycleTimer.Stop();
 		}
 
@@ -109,24 +146,22 @@ namespace ScrapBox.ECS.Components
 				return;
 			}
 
-			ReadAnimation();	
+			ReadSheet();	
 			IsAwake = true;
 		}
 
-		public virtual void Update(GameTime gameTime)
+		public virtual void Update(double dt)
 		{
 			if (!IsAwake)
 				return;
 		}
 
-		public virtual void Draw(SpriteBatch spriteBatch)
+		public virtual void Draw(SpriteBatch spriteBatch, Camera camera)
 		{
-			if (!IsAwake)
+			if (!IsAwake || clip == null)
 				return;
 
-			Renderer2D.RenderSprite(Sprite.Texture, Sprite.Transform.Position, 
-					Sprite.Transform.Dimensions, Sprite.Transform.Rotation, cells[currentColumn, currentRow], 
-					Sprite.TintColor, Sprite.Effects);
+			Sprite.SourceRectangle = cells[currentColumn + clip.ColumnOffset, currentRow + clip.RowOffset];
 		}
 	}
 }

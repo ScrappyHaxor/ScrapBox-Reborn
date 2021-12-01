@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.SMath;
+using ScrapBox.Scene;
 
 namespace ScrapBox.ECS.Components
 {
@@ -20,13 +21,13 @@ namespace ScrapBox.ECS.Components
 			IsAwake = true;
 		}
 
-		public virtual void Update(GameTime gameTime)
+		public virtual void Update(double dt)
 		{
 			if (!IsAwake)
 				return;
 		}
 
-		public virtual void Draw(SpriteBatch spriteBatch)
+		public virtual void Draw(SpriteBatch spriteBatch, Camera camera)
 		{
 			if (!IsAwake)
 				return;

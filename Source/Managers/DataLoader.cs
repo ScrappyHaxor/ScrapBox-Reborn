@@ -71,6 +71,47 @@ namespace ScrapBox.Managers
                 int[] tempArray = values[key].Split(',').Select(int.Parse).ToArray();
                 return (T)(object)(tempArray[0], tempArray[1]);
             }
+            else if (typeof(T) == typeof(int[,]))
+            {
+                string oneDim = String.Join(string.Empty, values[key].Split(',')).Trim();
+                oneDim = oneDim.Replace("\n", string.Empty);
+                oneDim = oneDim.Replace("\t", string.Empty);
+
+                //Pre scan for column size
+                int columnSize = 0;
+                for (int i = 0; i < oneDim.Length; i++)
+                {
+                    char c = oneDim[i];
+                    if (c == '/')
+                    {
+                        columnSize = i;
+                        break;
+                    }
+                }
+                
+                int rows = oneDim.Length / columnSize;
+                int[,] twoDim = new int[columnSize, rows];
+                
+                int currentColumn = 0;
+                int currentRow = 0;
+                for (int i = 0; i < oneDim.Length; i++)
+                {
+                    char c = oneDim[i];
+
+                    
+                    if (c == '/')
+                    {
+                        currentColumn = 0;
+                        currentRow++;
+                        continue;
+                    }
+                        
+                    twoDim[currentColumn, currentRow] = int.Parse(c.ToString());
+                    currentColumn++;
+                }
+
+                return (T)(object)twoDim;
+            }
 
             return (T)Convert.ChangeType(values[key], typeof(T));
         }

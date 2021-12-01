@@ -2,15 +2,16 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Managers;
+using ScrapBox.SMath;
 
-using System;
+
 
 namespace ScrapBox.Root
 {
 	public class ScrapApp : Game
 	{
-		public GraphicsDeviceManager Graphics { get { return graphics; }}
-		public SpriteBatch Batch { get { return spriteBatch; } }
+		public GraphicsDeviceManager Graphics { get { return graphics; } set { graphics = value; } }
+		public SpriteBatch Batch { get { return spriteBatch; } set { spriteBatch = value; Renderer2D.Initialize(spriteBatch); } }
 
 		private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
@@ -46,14 +47,25 @@ namespace ScrapBox.Root
 
 		protected override void Update(GameTime gameTime)
 		{
-			InputManager.Update();
-			Physics2D.Update(gameTime);
+			Update(ScrapMath.Deltafy(gameTime));
 			base.Update(gameTime);
 		}
 
 		protected override void Draw(GameTime gameTime)
 		{
+			Draw(ScrapMath.Deltafy(gameTime));
 			base.Draw(gameTime);
+		}
+
+		protected virtual void Update(double dt)
+		{
+			InputManager.Update();
+			Physics2D.Update(dt);
+		}
+
+		protected virtual void Draw(double dt)
+		{
+
 		}
 	}
 }
