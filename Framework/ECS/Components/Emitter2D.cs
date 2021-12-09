@@ -18,6 +18,10 @@ namespace ScrapBox.Framework.ECS.Components
         public List<Sprite2D> Sprites { get; set; }
         public int LifeSpan { get; set; }
         public int Count { get; set; }
+        public ScrapVector LinearVelocity { get; set; }
+        public ScrapVector AngularVelocity { get; set; }
+        public (int, int) MinDeviation { get; set; }
+        public (int, int) MaxDeviation { get; set; }
 
         private List<Particle> register;
 
@@ -32,18 +36,19 @@ namespace ScrapBox.Framework.ECS.Components
             Sprites = new List<Sprite2D>();
         }
 
+        protected ScrapVector CalcualteDeviation()
+        {
+            return new ScrapVector(
+                rand.Next(MinDeviation.Item1, MaxDeviation.Item1), 
+                rand.Next(MinDeviation.Item2, MaxDeviation.Item2));
+        }
+
         protected void GenerateParticle()
         {
-            Particle newParticle = new Particle();
-            newParticle.AddComponent(Sprites[rand.Next(Sprites.Count)]);
+            Texture2D randTexture = Sprites[rand.Next(Sprites.Count)].Texture;
+            Particle newParticle = new Particle(Transform.Position, randTexture, LifeSpan);
 
-            newParticle.Transform.Position = Transform.Position;
-            newParticle.Transform.Dimensions = Transform.Dimensions;
-            newParticle.Rigidbody.AddForce(new ScrapVector(
-                1 * rand.NextDouble() * 2 - 1, 
-                1 * rand.NextDouble() * 2 - 1));
-
-            newParticle.LifeSpan = LifeSpan;
+            newParticle.Rigidbody.AddForce(LinearVelocity + CalcualteDeviation());
             newParticle.Awake();
 
             register.Add(newParticle);
@@ -84,7 +89,7 @@ namespace ScrapBox.Framework.ECS.Components
             if (!IsAwake)
                 return;
 
-            if (register.Count - 1 < Count)
+            if (register.Count < Count)
             {
                 GenerateParticle();
             }
@@ -93,7 +98,7 @@ namespace ScrapBox.Framework.ECS.Components
             {
                 register[i].Update(dt);
 
-                if (register[i].LifeSpan <= 0)
+                if (register[i].Dead)
                 {
                     register.RemoveAt(i);
                     i--;

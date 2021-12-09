@@ -19,11 +19,11 @@ namespace ScrapBox.Framework.Managers
 
         public static ScrapVector Gravity = new ScrapVector(0, 9.14) * 100;
 
-        public static List<Collider> GetDynamicBodies { get { return DynamicBodies; } }
-        public static List<Collider> GetStaticBodies { get { return StaticBodies; } }
+        public static List<RigidBody2D> GetDynamicBodies { get { return DynamicBodies; } }
+        public static List<RigidBody2D> GetStaticBodies { get { return StaticBodies; } }
 
-        internal static List<Collider> DynamicBodies;
-        internal static List<Collider> StaticBodies;
+        internal static List<RigidBody2D> DynamicBodies;
+        internal static List<RigidBody2D> StaticBodies;
 
         internal static List<RigidBody2D> CollidingBodiesA;
         internal static List<RigidBody2D> CollidingBodiesB;
@@ -34,8 +34,8 @@ namespace ScrapBox.Framework.Managers
 
         static Physics2D()
         {
-            DynamicBodies = new List<Collider>();
-            StaticBodies = new List<Collider>();
+            DynamicBodies = new List<RigidBody2D>();
+            StaticBodies = new List<RigidBody2D>();
 
             CollidingBodiesA = new List<RigidBody2D>();
             CollidingBodiesB = new List<RigidBody2D>();
@@ -213,94 +213,108 @@ namespace ScrapBox.Framework.Managers
             Manifolds.Clear();
 
             //Detect colllisions and apply rigidbody states for dynamic versus static
-            foreach (Collider dynamicB in DynamicBodies)
+            foreach (RigidBody2D dynamicBody in DynamicBodies)
             {
+                if (!dynamicBody.IsAwake || !dynamicBody.HasCollider)
+                    continue;
+
+                Collider colliderA = dynamicBody.Collider;
+
                 RigidBody2D.RigidState state = RigidBody2D.RigidState.FALLING;
-                foreach (Collider staticB in StaticBodies)
+                foreach (RigidBody2D staticBody in StaticBodies)
                 {
-                    if (!dynamicB.IsAwake || !staticB.IsAwake)
-                        return;
+                    if (!staticBody.IsAwake || !staticBody.HasCollider)
+                        continue;
 
-                    if (IntersectPolygons(dynamicB.GetVerticies(), staticB.GetVerticies(), out CollisionManifold manifold))
+                    Collider colliderB = staticBody.Collider;
+
+                    if (IntersectPolygons(colliderA.GetVerticies(), colliderB.GetVerticies(), out CollisionManifold manifold))
                     {
-                        if (staticB.Trigger != Collider.TriggerType.NONE)
+                        if (colliderB.Trigger != Collider.TriggerType.NONE)
                         {
-                            staticB.Triggered?.Invoke(null, new TriggerArgs(dynamicB));
+                            colliderB.Triggered?.Invoke(null, new TriggerArgs(colliderA));
 
-                            if (staticB.Trigger == Collider.TriggerType.TRIGGER_ONLY)
+                            if (colliderB.Trigger == Collider.TriggerType.TRIGGER_ONLY)
                                 continue;
                         }
 
-                        if (staticB.Trigger != Collider.TriggerType.TRIGGER_ONLY &&
-                                IntersectPoint(new ScrapVector(dynamicB.Transform.Position.X, dynamicB.Bottom), staticB.GetVerticies()))
+                        if (colliderB.Trigger != Collider.TriggerType.TRIGGER_ONLY &&
+                                IntersectPoint(new ScrapVector(colliderA.Transform.Position.X, colliderA.Bottom), colliderB.GetVerticies()))
                         {
                             if (Gravity != ScrapVector.Zero)
                                 state = RigidBody2D.RigidState.REST_STATIC;
                         }
 
-                        CollidingBodiesA.Add(dynamicB.RigidBody);
-                        CollidingBodiesB.Add(staticB.RigidBody);
+                        CollidingBodiesA.Add(dynamicBody);
+                        CollidingBodiesB.Add(staticBody);
 
                         Manifolds.Add(manifold);
                     }
                 }
 
-                dynamicB.RigidBody.State = state;
+                dynamicBody.State = state;
             }
 
             //Detect collisions and apply rigidbody states for dynamic versus dynamic
             for (int i = 0; i < DynamicBodies.Count; i++)
             {
-                RigidBody2D.RigidState state = DynamicBodies[i].RigidBody.State;
+                if (!DynamicBodies[i].IsAwake || !DynamicBodies[i].HasCollider)
+                    continue;
+
+                Collider colliderA = DynamicBodies[i].Collider;
+
+                RigidBody2D.RigidState state = DynamicBodies[i].State;
                 for (int j = 0; j < DynamicBodies.Count; j++)
                 {
                     if (i == j) continue;
 
-                    if (!DynamicBodies[i].IsAwake || !DynamicBodies[j].IsAwake)
-                        return;
+                    if (!DynamicBodies[j].IsAwake || !DynamicBodies[j].HasCollider)
+                        continue;
 
-                    if (IntersectPolygons(DynamicBodies[i].GetVerticies(), DynamicBodies[j].GetVerticies(), out CollisionManifold manifold) && 
-                            IntersectPixels(DynamicBodies[i], DynamicBodies[j]))
+                    Collider colliderB = DynamicBodies[j].Collider;
+
+                    if (IntersectPolygons(colliderA.GetVerticies(), colliderB.GetVerticies(), out CollisionManifold manifold) && 
+                            IntersectPixels(colliderA, colliderB))
                     {
-                        if (DynamicBodies[j].Trigger != Collider.TriggerType.TRIGGER_ONLY &&
-                            IntersectPoint(new ScrapVector(DynamicBodies[i].Transform.Position.X, DynamicBodies[i].Bottom), DynamicBodies[j].GetVerticies()))
+                        if (colliderB.Trigger != Collider.TriggerType.TRIGGER_ONLY &&
+                            IntersectPoint(new ScrapVector(DynamicBodies[i].Transform.Position.X, colliderA.Bottom), colliderB.GetVerticies()))
                         {
                             if (Gravity != ScrapVector.Zero)
                                 state = RigidBody2D.RigidState.REST_DYNAMIC;
                         }
 
-                        if (DynamicBodies[i].Trigger != Collider.TriggerType.NONE)
+                        if (colliderA.Trigger != Collider.TriggerType.NONE)
                         {
-                            DynamicBodies[i].Triggered?.Invoke(null, new TriggerArgs(DynamicBodies[j]));
-                            if (DynamicBodies[i].Trigger == Collider.TriggerType.TRIGGER_ONLY)
+                            colliderA.Triggered?.Invoke(null, new TriggerArgs(colliderB));
+                            if (colliderA.Trigger == Collider.TriggerType.TRIGGER_ONLY)
                                 continue;
                         }
 
-                        if (DynamicBodies[j].Trigger != Collider.TriggerType.NONE)
+                        if (colliderB.Trigger != Collider.TriggerType.NONE)
                         {
-                            DynamicBodies[j].Triggered?.Invoke(null, new TriggerArgs(DynamicBodies[i]));
-                            if (DynamicBodies[j].Trigger == Collider.TriggerType.TRIGGER_ONLY)
+                            colliderB.Triggered?.Invoke(null, new TriggerArgs(colliderA));
+                            if (colliderB.Trigger == Collider.TriggerType.TRIGGER_ONLY)
                                 continue;
                         }
 
-                        CollidingBodiesA.Add(DynamicBodies[i].RigidBody);
-                        CollidingBodiesB.Add(DynamicBodies[j].RigidBody);
+                        CollidingBodiesA.Add(DynamicBodies[i]);
+                        CollidingBodiesB.Add(DynamicBodies[j]);
 
                         Manifolds.Add(manifold);
                     }
                 }
 
-                DynamicBodies[i].RigidBody.State = state;
+                DynamicBodies[i].State = state;
             }
 
 
             //Apply forces
-            foreach (Collider collider in DynamicBodies)
+            foreach (RigidBody2D body in DynamicBodies)
             {
-                if (collider.RigidBody.IsStatic || collider.RigidBody.Kinematic)
+                if (body.IsStatic || body.Kinematic)
                     continue;
 
-                collider.RigidBody.ApplyForces(dt, 1);
+                body.ApplyForces(dt, 1);
             }
 
             for (int i = 0; i < Manifolds.Count; i++)

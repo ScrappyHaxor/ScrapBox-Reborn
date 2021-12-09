@@ -28,11 +28,12 @@ namespace ScrapBox.Framework.ECS
 		{
 			foreach (IComponent component in componentRegister)
 			{
-				if (component.GetType().Equals(typeof(T)))
+				if (component.GetType().Equals(typeof(T)) ||
+					component.GetType().IsSubclassOf(typeof(T)))
 					return (T)component;
 			}
 			
-			LogManager.Log(new LogMessage("ECS", "Tried to get non-existant component.", LogMessage.Severity.WARNING));
+			LogManager.Log(new LogMessage("ECS", "Tried to get non-existant component. Use HasComponent if the component may not be attached.", LogMessage.Severity.WARNING));
 			return default;
 		}
 
@@ -40,7 +41,8 @@ namespace ScrapBox.Framework.ECS
 		{
 			foreach (IComponent component in componentRegister)
 			{
-				if (component.GetType().Equals(typeof(T)))
+				if (component.GetType().Equals(typeof(T)) || 
+					component.GetType().IsSubclassOf(typeof(T)))
 					return true;
 			}
 

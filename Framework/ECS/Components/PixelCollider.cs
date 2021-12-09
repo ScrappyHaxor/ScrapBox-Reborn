@@ -24,18 +24,7 @@ namespace ScrapBox.Framework.ECS.Components
 			UsedAlgorithm = Algorithm.SAT_PIXEL_PERFECT;
 
 			Sprite = Owner.GetComponent<Sprite2D>();
-			RigidBody = Owner.GetComponent<RigidBody2D>();
-			if (!RigidBody.IsStatic && Sprite == null)
-			{
-				LogManager.Log(new LogMessage("PixelCollider", "Missing dependency. Requires Sprite2D component to work.", LogMessage.Severity.ERROR));
-				return;
-			}
-
-			if (!RigidBody.IsStatic && !Sprite.IsAwake)
-			{
-				LogManager.Log(new LogMessage("PixelCollider", "Sprite2D component is not awake... Aborting...", LogMessage.Severity.ERROR));
-				return;
-			}
+			//FIXME
 
 			base.Awake();
 		}

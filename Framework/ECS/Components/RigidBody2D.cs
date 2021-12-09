@@ -19,7 +19,10 @@ namespace ScrapBox.Framework.ECS.Components
 		public Entity Owner { get; set; }
 		public bool IsAwake { get; set; }
 
+		public bool HasCollider { get; internal set; }
+
 		public Transform Transform { get; set; }
+		public Collider Collider { get; set; }
 		public ScrapVector Force { get; internal set; }
 		public double Torque { get; internal set; }
 
@@ -47,7 +50,6 @@ namespace ScrapBox.Framework.ECS.Components
 		
 		public virtual void AddForce(ScrapVector force)
 		{
-
 			Force += force;
 		}
 
@@ -112,13 +114,37 @@ namespace ScrapBox.Framework.ECS.Components
 			if (Mass == 0 && !IsStatic)
 				LogManager.Log(new LogMessage("RigidBody2D", "Mass is 0 on dynamic body. This will cause unexpected behaviour", LogMessage.Severity.WARNING));
 
-			I = Mass * (Transform.Dimensions.X * Transform.Dimensions.X + Transform.Dimensions.Y * Transform.Dimensions.Y) / 12.0;
+			HasCollider = Owner.HasComponent<Collider>();
 
+			if (HasCollider)
+            {
+				Collider = Owner.GetComponent<Collider>();
+			}
+
+			if (IsStatic)
+			{
+				Physics2D.StaticBodies.Add(this);
+			}
+			else
+			{
+				Physics2D.DynamicBodies.Add(this);
+			}
+
+			I = Mass * (Transform.Dimensions.X * Transform.Dimensions.X + Transform.Dimensions.Y * Transform.Dimensions.Y) / 12.0;
 			IsAwake = true;
 		}
 
 		public virtual void Sleep()
         {
+			if (IsStatic)
+			{
+				Physics2D.StaticBodies.Remove(this);
+			}
+			else
+			{
+				Physics2D.DynamicBodies.Remove(this);
+			}
+
 			IsAwake = false;
         }
 

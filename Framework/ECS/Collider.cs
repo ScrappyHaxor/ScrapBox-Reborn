@@ -32,7 +32,6 @@ namespace ScrapBox.Framework.ECS
 
 		public Transform Transform { get; set; }
 		public Sprite2D Sprite { get; set; }
-		public RigidBody2D RigidBody { get; set; }
 		public ScrapVector Dimensions { get; set; }
 		public Algorithm UsedAlgorithm { get; set; }
 		public TriggerType Trigger { get; set; }
@@ -61,42 +60,11 @@ namespace ScrapBox.Framework.ECS
 				return;
 			}
 
-			RigidBody = Owner.GetComponent<RigidBody2D>();
-			if (RigidBody == null)
-			{
-				LogManager.Log(new LogMessage("Collider", "Missing dependency. Requires rigidbody2D component to work.", LogMessage.Severity.ERROR));
-				return;
-			}
-
-			if (!RigidBody.IsAwake)
-			{
-				LogManager.Log(new LogMessage("Collider", "Rigidbody2D component is not awake... Aborting...", LogMessage.Severity.ERROR));
-				return;
-			}
-
-			if (RigidBody.IsStatic)
-			{
-				Physics2D.StaticBodies.Add(this);
-			}
-			else
-			{
-				Physics2D.DynamicBodies.Add(this);
-			}
-
 			IsAwake = true;
         }
 
 		public virtual void Sleep()
 		{
-			if (RigidBody.IsStatic)
-			{
-				Physics2D.StaticBodies.Remove(this);
-			}
-			else
-			{
-				Physics2D.DynamicBodies.Remove(this);
-			}
-
 			IsAwake = false;
 		}
 

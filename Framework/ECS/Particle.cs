@@ -1,5 +1,10 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using System;
+using System.Timers;
+
+using Microsoft.Xna.Framework.Graphics;
+
 using ScrapBox.Framework.ECS.Components;
+using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Scene;
 
 namespace ScrapBox.Framework.ECS
@@ -10,22 +15,50 @@ namespace ScrapBox.Framework.ECS
         public Sprite2D Sprite { get; set; }
         public RigidBody2D Rigidbody { get; set; }
 
-        public int LifeSpan { get; set; }
+        public bool Dead { get; internal set; }
 
-        public Particle()
+        private Timer lifeTimer;
+
+        public Particle(ScrapVector position, Texture2D sprite, int lifeSpan)
         {
-            Transform = new Transform();
+            lifeTimer = new Timer(lifeSpan);
+            lifeTimer.Elapsed += MarkAsDead;
+
+            Transform = new Transform
+            {
+                Position = position,
+                Dimensions = new ScrapVector(sprite.Width, sprite.Height)
+            };
+
             AddComponent(Transform);
+
+            Sprite = new Sprite2D
+            {
+                Texture = sprite
+            };
+
+            AddComponent(Sprite);
 
             Rigidbody = new RigidBody2D
             {
                 Mass = 1,
                 Restitution = 0f,
-                Drag = 0.9,
-                Friction = 0.9
-        };
+                Drag = 1,
+                Friction = 1
+            };
 
             AddComponent(Rigidbody);
+        }
+
+        private void MarkAsDead(object o, EventArgs e)
+        {
+            Dead = true;
+        }
+
+        public override void Awake()
+        {
+            lifeTimer.Start();
+            base.Awake();
         }
 
         public override void Update(double dt)
@@ -33,7 +66,6 @@ namespace ScrapBox.Framework.ECS
             if (!IsAwake)
                 return;
 
-            LifeSpan--;
             base.Update(dt);
         }
 
