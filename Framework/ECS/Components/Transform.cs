@@ -1,41 +1,25 @@
-using Microsoft.Xna.Framework.Graphics;
-
 using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-	public class Transform : IComponent
+	public class Transform : Component
 	{
-		public virtual Entity Owner { get; set; }
-		public virtual bool IsAwake { get; set; }
+		public override string Name => "Transform";
 
-		public ScrapVector Position { get; set; }
+        public ScrapVector Position { get; set; }
 		public ScrapVector Dimensions { get; set; }
 		public float Depth { get; set; }
-		public float Rotation { get; set; }
+		public double Rotation { get; set; }
 		
-		public virtual void Awake()
+		public override void Awake()
 		{
 			IsAwake = true;
 		}
 
-		public virtual void Sleep()
+		public override void Sleep()
         {
 			IsAwake = false;
         }
-
-		public virtual void Update(double dt)
-		{
-			if (!IsAwake)
-				return;
-		}
-
-		public virtual void Draw(SpriteBatch spriteBatch, Camera camera)
-		{
-			if (!IsAwake)
-				return;
-		}
 	}
 
 }

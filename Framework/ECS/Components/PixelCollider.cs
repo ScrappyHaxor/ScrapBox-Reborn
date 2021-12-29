@@ -1,8 +1,4 @@
-using Microsoft.Xna.Framework.Graphics;
-
-using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
 
 namespace ScrapBox.Framework.ECS.Components
 {
@@ -21,28 +17,13 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Awake()
 		{
-			UsedAlgorithm = Algorithm.SAT_PIXEL_PERFECT;
+			Algorithm = CollisionAlgorithm.SAT_PIXEL;
 
-			Sprite = Owner.GetComponent<Sprite2D>();
-			//FIXME
+			bool success = Dependency(out Sprite);
+			if (!success)
+				return;
 
 			base.Awake();
-		}
-
-		public override void Update(double dt)
-		{
-			if (!IsAwake)
-				return;
-
-			base.Update(dt);
-		}
-
-		public override void Draw(SpriteBatch spriteBatch, Camera camera)
-		{
-			if (!IsAwake)
-				return;
-
-			base.Draw(spriteBatch, camera);
 		}
 	}
 }

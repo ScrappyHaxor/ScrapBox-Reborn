@@ -3,47 +3,48 @@ using System.Collections.Generic;
 
 using Microsoft.Xna.Framework.Graphics;
 
-using ScrapBox.Framework.Managers;
-using ScrapBox.Framework.Scene;
+using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Math;
+using ScrapBox.Framework.Managers;
+using ScrapBox.Framework.ECS.Systems;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class Emitter2D : IComponent
+    public class Emitter2D : Component
     {
-        public Entity Owner { get; set; }
-        public bool IsAwake { get; set; }
+        public override string Name => "Emitter2D";
 
-        public Transform Transform { get; set; }
+        public Transform Transform;
+
         public List<Sprite2D> Sprites { get; set; }
         public int LifeSpan { get; set; }
-        public int Count { get; set; }
+        public int MaxParticles { get; set; }
         public ScrapVector LinearVelocity { get; set; }
         public ScrapVector AngularVelocity { get; set; }
         public (int, int) MinDeviation { get; set; }
         public (int, int) MaxDeviation { get; set; }
 
-        private List<Particle> register;
+        internal readonly List<Particle> Particles;
 
-        private Random rand;
+        private readonly Random rand;
         
 
         public Emitter2D()
         {
             rand = ScrapMath.GetSeededRandom();
 
-            register = new List<Particle>();
+            Particles = new List<Particle>();
             Sprites = new List<Sprite2D>();
         }
 
-        protected ScrapVector CalcualteDeviation()
+        internal ScrapVector CalcualteDeviation()
         {
             return new ScrapVector(
                 rand.Next(MinDeviation.Item1, MaxDeviation.Item1), 
                 rand.Next(MinDeviation.Item2, MaxDeviation.Item2));
         }
 
-        protected void GenerateParticle()
+        internal void GenerateParticle()
         {
             Texture2D randTexture = Sprites[rand.Next(Sprites.Count)].Texture;
             Particle newParticle = new Particle(Transform.Position, randTexture, LifeSpan);
@@ -51,69 +52,53 @@ namespace ScrapBox.Framework.ECS.Components
             newParticle.Rigidbody.AddForce(LinearVelocity + CalcualteDeviation());
             newParticle.Awake();
 
-            register.Add(newParticle);
+            Particles.Add(newParticle);
         }
 
-        public void Awake()
+        public override void Awake()
         {
-            Transform = Owner.GetComponent<Transform>();
-            if (Transform == null)
-            {
-                LogManager.Log(new LogMessage("Emitter2D", "Missing dependency. Requires transform component to work.", LogMessage.Severity.ERROR));
+            bool success = Dependency(out Transform);
+            if (!success)
                 return;
-            }
-
-            if (!Transform.IsAwake)
-            {
-                LogManager.Log(new LogMessage("Emitter2D", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
-                return;
-            }
 
             if (Sprites.Count == 0)
             {
-                LogManager.Log(new LogMessage("Emitter2D", "At least one sprite must be assigned... Aborting...", LogMessage.Severity.ERROR));
+                LogService.Log(Name, "Awake", "At least one sprite must be assigned to texture pool.", Severity.ERROR);
                 return;
             }
 
+            ParticleSystem particleSystem = (ParticleSystem)WorldManager.GetSystem<ParticleSystem>();
+            particleSystem.RegisterEmitter(this);
             IsAwake = true;
         }
 
 
-        public void Sleep()
+        public override void Sleep()
         {
+            Particles.Clear();
+            //Improve this by adding auto remove of sleeping components to World
+            ParticleSystem particleSystem = (ParticleSystem)WorldManager.GetSystem<ParticleSystem>();
+            particleSystem.PurgeEmitter(this);
             IsAwake = false;
         }
 
-        public void Update(double dt)
+        internal void Tick(double dt)
         {
-            if (!IsAwake)
-                return;
-
-            if (register.Count < Count)
+            if (Particles.Count < MaxParticles)
             {
                 GenerateParticle();
             }
 
-            for (int i = 0; i < register.Count; i++)
+            for (int i = 0; i < Particles.Count; i++)
             {
-                register[i].Update(dt);
+                Particles[i].Update(dt);
 
-                if (register[i].Dead)
+                if (Particles[i].Dead)
                 {
-                    register.RemoveAt(i);
+                    Particles[i].Sleep();
+                    Particles.RemoveAt(i);
                     i--;
                 }
-            }
-        }
-
-        public void Draw(SpriteBatch spriteBatch, Camera camera)
-        {
-            if (!IsAwake)
-                return;
-
-            foreach (Particle p in register)
-            {
-                p.Draw(spriteBatch, camera);
             }
         }
     }

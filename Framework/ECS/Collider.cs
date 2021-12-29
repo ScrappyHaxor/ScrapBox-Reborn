@@ -1,22 +1,29 @@
 using System;
 
-using Microsoft.Xna.Framework.Graphics;
-
 using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
 using ScrapBox.Framework.Managers;
+using ScrapBox.Framework.ECS.Systems;
 using ScrapBox.Framework.ECS.Components;
 
 namespace ScrapBox.Framework.ECS
 {
-	public abstract class Collider : IComponent
+	public class TriggerArgs : EventArgs
 	{
-		public enum Algorithm
+		public Collider Other { get; set; }
+
+		public TriggerArgs(Collider other)
+		{
+			Other = other;
+		}
+	}
+
+	public abstract class Collider : Component
+	{
+		public enum CollisionAlgorithm
 		{
 			SAT,
 			SAT_CIRCLE,
-			SAT_PIXEL_PERFECT,
-			SAT_PIXEL_PERFECT_CIRCLE
+			SAT_PIXEL
 		}
 
 		public enum TriggerType
@@ -26,18 +33,17 @@ namespace ScrapBox.Framework.ECS
 			HYBRID
 		}
 
-		public Entity Owner { get; set; }
-		public bool IsAwake { get; set; }
+		public override string Name => "Collider";
 
+		public Transform Transform;
+		public RigidBody2D Rigidbody;
+		public Sprite2D Sprite;
 
-		public Transform Transform { get; set; }
-		public Sprite2D Sprite { get; set; }
 		public ScrapVector Dimensions { get; set; }
-		public Algorithm UsedAlgorithm { get; set; }
+		public CollisionAlgorithm Algorithm { get; set; }
 		public TriggerType Trigger { get; set; }
 		public EventHandler<TriggerArgs> Triggered { get; set; }
 
-		public bool HasRigidbody { get { return Owner.HasComponent<RigidBody2D>(); } }
 		public double Top { get { return Transform.Position.Y - Dimensions.Y / 2; } }
 		public double Bottom { get { return Transform.Position.Y + Dimensions.Y / 2; } }
 		public double Left { get { return Transform.Position.X - Dimensions.X / 2; } }
@@ -45,41 +51,28 @@ namespace ScrapBox.Framework.ECS
 
         public abstract ScrapVector[] GetVerticies();
 
-        public virtual void Awake()
+        public override void Awake()
         {
-			Transform = Owner.GetComponent<Transform>();
-			if (Transform == null)
-			{
-				LogManager.Log(new LogMessage("Collider", "Missing dependency. Requires transform component to work.", LogMessage.Severity.ERROR));
+			bool success = Dependency(out Transform);
+			if (!success)
 				return;
-			}
 
-			if (!Transform.IsAwake)
-			{
-				LogManager.Log(new LogMessage("Collider", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
+			success = Dependency(out Rigidbody);
+			if (!success)
 				return;
-			}
+
+			CollisionSystem collisionSystem = (CollisionSystem)WorldManager.GetSystem<CollisionSystem>();
+			collisionSystem.RegisterCollider(this);
 
 			IsAwake = true;
         }
 
-		public virtual void Sleep()
+		public override void Sleep()
 		{
+			CollisionSystem collisionSystem = (CollisionSystem)WorldManager.GetSystem<CollisionSystem>();
+			collisionSystem.PurgeCollider(this);
+
 			IsAwake = false;
-		}
-
-		public virtual void Update(double dt)
-        {
-			if (!IsAwake)
-				return;
-
-        }
-
-        public virtual void Draw(SpriteBatch spriteBatch, Camera camera)
-        {
-			if (!IsAwake)
-				return;
-
 		}
     }
 }

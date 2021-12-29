@@ -1,67 +1,62 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
+﻿//using Microsoft.Xna.Framework.Graphics;
+//using Microsoft.Xna.Framework;
 
-using ScrapBox.Framework.Managers;
-using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
+//using ScrapBox.Framework.Managers;
+//using ScrapBox.Framework.Services;
+//using ScrapBox.Framework.Math;
+//using ScrapBox.Framework.Scene;
 
-namespace ScrapBox.Framework.ECS.Components
-{
-    public class UILabel : IComponent
-    {
-        public Entity Owner { get; set; }
-        public bool IsAwake { get; set; }
-        public Transform Transform { get; set; }
+//namespace ScrapBox.Framework.ECS.Components
+//{
+//    public class UILabel : IComponent
+//    {
+//        public Entity Owner { get; set; }
+//        public bool IsAwake { get; set; }
+//        public Transform Transform { get; set; }
 
-        public string Label { get; set; }
-        public SpriteFont Font { get; set; }
-        public Color TextColor { get; set; }
+//        public string Label { get; set; }
+//        public SpriteFont Font { get; set; }
+//        public Color TextColor { get; set; }
 
-        public UILabel()
-        {
+//        public UILabel()
+//        {
 
-        }
+//        }
 
-        public void Awake()
-        {
-            Transform = Owner.GetComponent<Transform>();
-            if (Transform == null)
-            {
-                LogManager.Log(new LogMessage("Sprite2D", "Missing dependency. Requires transform component to work.", LogMessage.Severity.ERROR));
-                return;
-            }
+//        public void Awake()
+//        {
+//            Transform = Owner.GetComponent<Transform>();
+//            if (Transform == null)
+//            {
+//                LogService.Log("Sprite2D", "Awake", "Missing dependency. Requires transform component to work.", Severity.ERROR);
+//                return;
+//            }
 
-            if (!Transform.IsAwake)
-            {
-                LogManager.Log(new LogMessage("Sprite2D", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
-                return;
-            }
+//            if (!Transform.IsAwake)
+//            {
+//                LogService.Log("Sprite2D", "Awake", "Transform component is not awake... Aborting...", Severity.ERROR);
+//                return;
+//            }
 
-            IsAwake = true;
-        }
+//            IsAwake = true;
+//        }
 
-        public virtual void Sleep()
-        {
-            IsAwake = false;
-        }
+//        public virtual void Sleep()
+//        {
+//            IsAwake = false;
+//        }
 
-        public void Update(double dt)
-        {
-            if (!IsAwake)
-                return;
+//        public void Update(double dt)
+//        {
 
+//        }
 
-        }
+//        public void Draw(Camera camera)
+//        {
+//            if (Font == null)
+//                return;
 
-        public void Draw(SpriteBatch spriteBatch, Camera camera)
-        {
-            if (!IsAwake)
-                return;
-
-            if (Font == null)
-                return;
-
-            Renderer2D.RenderText(Font, Label, Transform.Position - new ScrapVector(Font.MeasureString(Label)/2), TextColor);
-        }
-    }
-}
+//            Renderer.RenderText(Font, Label, Transform.Position - new ScrapVector(Font.MeasureString(Label)/2), TextColor);
+//        }
+//    }
+//}

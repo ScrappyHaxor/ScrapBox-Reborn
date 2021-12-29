@@ -1,92 +1,136 @@
 using System.Collections.Generic;
 
-using Microsoft.Xna.Framework.Graphics;
-
+using ScrapBox.Framework.Services;
+using ScrapBox.Framework.Level;
 using ScrapBox.Framework.Managers;
-using ScrapBox.Framework.Scene;
 
 namespace ScrapBox.Framework.ECS
 {
-	public class Entity
+	public abstract class Entity
 	{
+		public abstract string Name { get; }
+
 		public int ID { get; set; }
 		public bool IsAwake { get; set; }
 
-		private readonly List<IComponent> componentRegister = new List<IComponent>();
+		private readonly List<Component> register = new List<Component>();
+
+		//The entire entity component system is in need of optimization. Too many typeof and gettype
 	
-		public T AddComponent<T>(T component) where T : IComponent
-		{
-			if (componentRegister.Contains(component))
-				LogManager.Log(new LogMessage("ECS", "Component already exists. Expect undefined behaviour from here.", LogMessage.Severity.WARNING));
+		~Entity()
+        {
+			foreach (Component component in register)
+            {
+				component.Sleep();
+            }
 
-			componentRegister.Add(component);
-			component.Owner = this;
-			return component;
-		}
+			register.Clear();
+        }
 
-		public T GetComponent<T>() where T : IComponent 
+		protected bool Dependency<T>(out T entity, bool optional = false) where T : Entity
 		{
-			foreach (IComponent component in componentRegister)
+			entity = default;
+
+			if (!WorldManager.HasEntity<T>())
 			{
-				if (component.GetType().Equals(typeof(T)) ||
-					component.GetType().IsSubclassOf(typeof(T)))
-					return (T)component;
+				if (!optional)
+				{
+					LogService.Log(Name, "Dependency", $"Missing dependency. Requires type {typeof(T)} to work.", Severity.ERROR);
+				}
+
+				return false;
 			}
-			
-			LogManager.Log(new LogMessage("ECS", "Tried to get non-existant component. Use HasComponent if the component may not be attached.", LogMessage.Severity.WARNING));
-			return default;
+
+			entity = (T)WorldManager.GetEntity<T>();
+			if (!entity.IsAwake)
+			{
+				if (!optional)
+				{
+					LogService.Log(Name, "Dependency", $"Dependency type {typeof(T)} is not awake.", Severity.ERROR);
+				}
+
+				return false;
+			}
+
+			return true;
 		}
 
-		public bool HasComponent<T>() where T : IComponent
+		public void RegisterComponent<T>(T component) where T : Component
 		{
-			foreach (IComponent component in componentRegister)
+			if (HasComponent<T>())
+            {
+				LogService.Log("ECS", "RegisterComponent", "Component already exists.", Severity.ERROR);
+				return;
+			}
+				
+			register.Add(component);
+			component.Owner = this;
+		}
+
+		public void PurgeComponent<T>(T component) where T : Component
+        {
+			if (!HasComponent<T>())
+            {
+				LogService.Log("ECS", "PurgeComponent", "Component doesn't exist.", Severity.ERROR);
+				return;
+			}
+
+			register.Remove(component);	
+        }
+
+		public bool HasComponent<T>() where T : Component
+		{
+			foreach (Component component in register)
 			{
-				if (component.GetType().Equals(typeof(T)) || 
-					component.GetType().IsSubclassOf(typeof(T)))
+				if (component.GetType().Equals(typeof(T)) || component.GetType().IsSubclassOf(typeof(T)))
 					return true;
 			}
 
 			return false;
 		}
-		
+
+		public T GetComponent<T>() where T : Component
+		{
+			foreach (Component component in register)
+			{
+				if (component.GetType().Equals(typeof(T)) || component.GetType().IsSubclassOf(typeof(T)))
+					return (T)component;
+			}
+			
+			LogService.Log("ECS", "GetComponent", "Tried to get non-existant component.", Severity.WARNING);
+			return default;
+		}
+
 		public virtual void Awake() 
 		{ 
-			foreach (IComponent component in componentRegister)
+			foreach (Component component in register)
 			{
 				component.Awake();
 			}
 
+			WorldManager.RegisterEntity(this);
 			IsAwake = true;
 		}
 
 		public virtual void Sleep()
         {
-			foreach (IComponent component in componentRegister)
+			foreach (Component component in register)
             {
 				component.Sleep();
             }
 
+			WorldManager.PurgeEntity(this);
 			IsAwake = false;
         }
 
 		public virtual void Update(double dt) 
 		{ 
-			if (!IsAwake) return;
 
-			foreach (IComponent component in componentRegister)
-			{
-				component.Update(dt);
-			}
 		}
 
-		public virtual void Draw(SpriteBatch spriteBatch, Camera camera) 
-		{ 
-			if (!IsAwake) return; 
+		public virtual void Draw(Camera mainCamera)
+        {
 
-			foreach (IComponent component in componentRegister)
-			{
-				component.Draw(spriteBatch, camera);
-			}
-		} 
+        }
 	}
 }

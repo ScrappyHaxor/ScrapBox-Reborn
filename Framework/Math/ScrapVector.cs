@@ -12,20 +12,51 @@ namespace ScrapBox.Framework.Math
 		
 		public ScrapVector(double x)
 		{
+			if (x == -0)
+            {
+				x = 0;
+            }
+
 			X = x;
 			Y = x;
 		}
 
 		public ScrapVector(double x, double y)
 		{
+			if (x == -0)
+            {
+				x = 0;
+            }
+
+			if (y == -0)
+            {
+				y = 0;
+            }
+
 			X = x;
 			Y = y;
 		}
 
 		public ScrapVector(Vector2 v)
         {
+			if (v.X == -0)
+            {
+				v.X = 0;
+            }
+
+			if (v.Y == -0)
+            {
+				v.Y = 0;
+            }
+
 			X = v.X;
 			Y = v.Y;
+        }
+
+		public static ScrapVector Parse(string input)
+        {
+			string[] components = input.Split(",");
+			return new ScrapVector(double.Parse(components[0]), double.Parse(components[1]));
         }
 
 		public static ScrapVector operator+(ScrapVector a, ScrapVector b)
@@ -86,7 +117,7 @@ namespace ScrapBox.Framework.Math
 
 		public override int GetHashCode()
 		{
-			return (X + Y).GetHashCode();
+			return X.GetHashCode() ^ Y.GetHashCode();
 		}
 
 		public override bool Equals(object obj)
@@ -99,19 +130,16 @@ namespace ScrapBox.Framework.Math
 			return X == other.X && Y == other.Y;
 		}
 
-		public Vector2 ToMono()
-		{
-			return new Vector2((float)X, (float)Y);
-		}
-
 		public override string ToString()
 		{
-			return $"{X}, {Y}";
+			return $"{X},{Y}";
 		}
 
 		public static ScrapVector Transform(ScrapVector position, Matrix matrix)
 		{
 			return new ScrapVector((position.X * matrix.M11) + (position.Y * matrix.M21) + matrix.M41, (position.X * matrix.M12) + (position.Y * matrix.M22) + matrix.M42);
-		}	
+		}
+
+		public static implicit operator Vector2(ScrapVector v) => new Vector2((float)v.X, (float)v.Y);
 	}
 }

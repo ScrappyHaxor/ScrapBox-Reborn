@@ -5,11 +5,12 @@ using ScrapBox.Framework.Math;
 using ScrapBox.Framework.ECS;
 using ScrapBox.Framework.ECS.Components;
 
-namespace ScrapBox.Framework.Scene
+namespace ScrapBox.Framework.Level
 {
 	public class Camera : Entity
 	{
-		public Transform Transform { get; set; }
+        public override string Name => "ScrapBox Camera";
+        public Transform Transform { get; set; }
 		public Rectangle Bounds { get; internal set; }
 		public Rectangle VisibleArea { get; internal set; }
 		public Matrix TransformationMatrix { get; set; }
@@ -17,14 +18,14 @@ namespace ScrapBox.Framework.Scene
 
 		public Camera(Viewport viewport)
 		{
-			Zoom = 1;
 			Bounds = viewport.Bounds;
-            Transform = new Transform
+			Zoom = 1;
+			Transform = new Transform
             {
                 Position = ScrapVector.Zero
             };
 
-            AddComponent(Transform);
+            RegisterComponent(Transform);
 		}
 		
 		public void Update(Viewport viewport)

@@ -3,29 +3,58 @@ using System.Timers;
 using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
-using ScrapBox.Framework.Managers;
-using ScrapBox.Framework.Scene;
-using ScrapBox.Framework.Utils;
+using ScrapBox.Framework.Services;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-	public class Animator2D : IComponent
+	public class AnimationClip
 	{
-		public EventHandler<AnimatorFinishedArgs> Finished { get; set; }
+		public string Name { get; set; }
+		public int Columns { get; set; }
+		public int Rows { get; set; }
+		public int Speed { get; set; }
 
-		public Entity Owner { get; set; }
-		public bool IsAwake { get; set; }
-		
-		public Sprite2D Sprite { get; set; }
+		public int ColumnOffset { get; set; }
+		public int RowOffset { get; set; }
+
+		public bool Looped { get; set; }
+
+		public AnimationClip(int columns, int rows, int speed, int columnOffset = 0, int rowOffset = 0, bool looped = true)
+		{
+			Columns = columns;
+			Rows = rows;
+			Speed = speed;
+			ColumnOffset = columnOffset;
+			RowOffset = rowOffset;
+			Looped = looped;
+		}
+	}
+
+	public class AnimatorFinishedArgs
+	{
+		public string Name { get; set; }
+
+		public AnimatorFinishedArgs(string name)
+		{
+			Name = name;
+		}
+	}
+
+	public class Animator2D : Component
+	{
+        public override string Name => "Animator2D";
+
+        public EventHandler<AnimatorFinishedArgs> Finished { get; set; }
+
+		public Sprite2D Sprite;
 
 		public bool Playing { get { return enabled; } }
 
 		public (int, int) CellSize { get; set; }
 
 		private readonly Timer cycleTimer;
-		protected bool enabled;
+		private bool enabled;
 		private AnimationClip clip;
 		private Rectangle[,] cells;
 		private int currentColumn;
@@ -41,25 +70,25 @@ namespace ScrapBox.Framework.ECS.Components
 			Clips = new Dictionary<string, AnimationClip>();
 		}
 
-		public virtual void RegisterClip(string name, AnimationClip clip)
+		public void RegisterClip(string name, AnimationClip clip)
         {
 			clip.Name = name;
 			Clips.Add(name, clip);
         }
 
-		public virtual void SwapClip(string name)
+		public void SwapClip(string name)
         {
 			ResetAnimation();
 			clip = Clips.GetValueOrDefault(name);
 			cycleTimer.Interval = clip.Speed;
         }
 
-		public virtual bool ClipLoaded(string name)
+		public bool ClipLoaded(string name)
         {
 			return name == clip.Name;
         }
 
-		protected virtual void ReadSheet()
+		protected void ReadSheet()
 		{
 			int MaxColumns = Sprite.Texture.Width / CellSize.Item1;
 			int MaxRows = Sprite.Texture.Height / CellSize.Item2;
@@ -86,7 +115,7 @@ namespace ScrapBox.Framework.ECS.Components
 			}
 		}
 
-		protected virtual void CycleAnimation(object o, EventArgs e)
+		protected void CycleAnimation(object o, EventArgs e)
 		{
 			currentColumn++;
 			if (currentColumn == clip.Columns)
@@ -107,64 +136,48 @@ namespace ScrapBox.Framework.ECS.Components
 
 				currentRow = 0;
 			}
+
+			Sprite.SourceRectangle = cells[currentColumn + clip.ColumnOffset, currentRow + clip.RowOffset];
 		}
 
-		public virtual void StartAnimating()
+		public void StartAnimating()
 		{
 			enabled = true;
 			CycleAnimation(null, null);
 			cycleTimer.Start();
 		}
 
-		public virtual void StopAnimating()
+		public void StopAnimating()
 		{
 			enabled = false;
 			cycleTimer.Stop();
 		}
 
-		public virtual void ResetAnimation()
+		public void ResetAnimation()
 		{
 			currentColumn = 0;
 			currentRow = 0;
 		}
 
-		public virtual void Awake()
+		public override void Awake()
 		{
-			Sprite = Owner.GetComponent<Sprite2D>();
-
-			if (Sprite == null)
-			{
-				LogManager.Log(new LogMessage("Animator2D", "Missing dependency. Requires Sprite2D component to work.", LogMessage.Severity.ERROR));
+			bool success = Dependency(out Sprite);
+			if (!success)
 				return;
-			}
 
-			if (!Sprite.IsAwake)
-			{
-				LogManager.Log(new LogMessage("Animator2D", "Sprite2D component is not awake.. Aborting...", LogMessage.Severity.ERROR));
+			if (clip == null)
+            {
+				LogService.Log(Name, "Awake", "No animation clip loaded.", Severity.ERROR);
 				return;
-			}
+            }
 
 			ReadSheet();	
 			IsAwake = true;
 		}
 
-		public virtual void Sleep()
+		public override void Sleep()
         {
 			IsAwake = false;
         }
-
-		public virtual void Update(double dt)
-		{
-			if (!IsAwake)
-				return;
-		}
-
-		public virtual void Draw(SpriteBatch spriteBatch, Camera camera)
-		{
-			if (!IsAwake || clip == null)
-				return;
-
-			Sprite.SourceRectangle = cells[currentColumn + clip.ColumnOffset, currentRow + clip.RowOffset];
-		}
 	}
 }

@@ -2,6 +2,6 @@
 {
     public interface IDataWrapper
     {
-        public void WriteData();
+        public void ParseLine(string line);
     }
 }

@@ -1,13 +1,15 @@
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
+using ScrapBox.Framework.Level;
 
 namespace ScrapBox.Framework.ECS.Components
 {
 	public class BoxCollider2D : Collider
 	{
-		public override ScrapVector[] GetVerticies()
+		public override string Name => "BoxCollider2D";
+
+        public override ScrapVector[] GetVerticies()
 		{
 			ScrapVector[] verts = new ScrapVector[4];
 			verts[0] = ScrapMath.RotatePoint(new ScrapVector(Left, Top), Transform.Position, Transform.Rotation);
@@ -20,25 +22,9 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Awake()
 		{
-			UsedAlgorithm = Algorithm.SAT;
+			Algorithm = CollisionAlgorithm.SAT;
 
 			base.Awake();
-		}
-
-		public override void Update(double dt)
-		{
-			if (!IsAwake)
-				return;
-
-			base.Update(dt);
-		}
-
-		public override void Draw(SpriteBatch spriteBatch, Camera camera)
-		{
-			if (!IsAwake)
-				return;
-
-			base.Draw(spriteBatch, camera);
 		}
 	}
 }

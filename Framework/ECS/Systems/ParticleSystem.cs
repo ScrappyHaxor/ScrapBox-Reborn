@@ -1,23 +1,26 @@
 ﻿using System;
 using System.Timers;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework.Graphics;
 
+using ScrapBox.Framework.Level;
 using ScrapBox.Framework.ECS.Components;
 using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
 
-namespace ScrapBox.Framework.ECS
+namespace ScrapBox.Framework.ECS.Systems
 {
     internal class Particle : Entity
     {
+        public override string Name => "ScrapBox Particle";
+
         public Transform Transform { get; set; }
         public Sprite2D Sprite { get; set; }
         public RigidBody2D Rigidbody { get; set; }
 
         public bool Dead { get; internal set; }
 
-        private Timer lifeTimer;
+        private readonly Timer lifeTimer;
 
         public Particle(ScrapVector position, Texture2D sprite, int lifeSpan)
         {
@@ -30,14 +33,14 @@ namespace ScrapBox.Framework.ECS
                 Dimensions = new ScrapVector(sprite.Width, sprite.Height)
             };
 
-            AddComponent(Transform);
+            RegisterComponent(Transform);
 
             Sprite = new Sprite2D
             {
                 Texture = sprite
             };
 
-            AddComponent(Sprite);
+            RegisterComponent(Sprite);
 
             Rigidbody = new RigidBody2D
             {
@@ -47,7 +50,7 @@ namespace ScrapBox.Framework.ECS
                 Friction = 1
             };
 
-            AddComponent(Rigidbody);
+            RegisterComponent(Rigidbody);
         }
 
         private void MarkAsDead(object o, EventArgs e)
@@ -58,23 +61,41 @@ namespace ScrapBox.Framework.ECS
         public override void Awake()
         {
             lifeTimer.Start();
+
             base.Awake();
+        }
+    }
+
+    public class ParticleSystem : ComponentSystem
+    {
+        private readonly List<Emitter2D> emitters;
+
+        public ParticleSystem()
+        {
+            emitters = new List<Emitter2D>();
+        }
+
+        public void RegisterEmitter(Emitter2D emitter)
+        {
+            emitters.Add(emitter);
+        }
+
+        public void PurgeEmitter(Emitter2D emitter)
+        {
+            emitters.Remove(emitter);
         }
 
         public override void Update(double dt)
         {
-            if (!IsAwake)
-                return;
-
-            base.Update(dt);
+            foreach (Emitter2D emitter in emitters)
+            {
+                emitter.Tick(dt);
+            }
         }
 
-        public override void Draw(SpriteBatch spriteBatch, Camera camera)
+        public override void Draw(Camera mainCamera)
         {
-            if (!IsAwake)
-                return;
 
-            base.Draw(spriteBatch, camera);
         }
     }
 }

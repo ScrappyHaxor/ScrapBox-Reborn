@@ -1,13 +1,11 @@
-using Microsoft.Xna.Framework.Graphics;
-
 using ScrapBox.Framework.Managers;
+using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Math;
-using ScrapBox.Framework.Scene;
-
+using ScrapBox.Framework.ECS.Systems;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-	public class RigidBody2D : IComponent
+	public class RigidBody2D : Component
 	{
 		public enum RigidState
 		{
@@ -16,13 +14,11 @@ namespace ScrapBox.Framework.ECS.Components
 			FALLING
 		}
 
-		public Entity Owner { get; set; }
-		public bool IsAwake { get; set; }
+		public override string Name => "Rigidbody2D";
 
-		public bool HasCollider { get; internal set; }
 
-		public Transform Transform { get; set; }
-		public Collider Collider { get; set; }
+		public Transform Transform;
+
 		public ScrapVector Force { get; internal set; }
 		public double Torque { get; internal set; }
 
@@ -48,12 +44,12 @@ namespace ScrapBox.Framework.ECS.Components
 			State = RigidState.FALLING;
 		}
 		
-		public virtual void AddForce(ScrapVector force)
+		public void AddForce(ScrapVector force)
 		{
 			Force += force;
 		}
 
-		internal virtual void ApplyForces(double dt, double iterations)
+		internal void ApplyForces(double dt, double iterations)
 		{
 			if (!IsAwake)
 				return;
@@ -63,14 +59,14 @@ namespace ScrapBox.Framework.ECS.Components
 
 			if (State != RigidState.REST_STATIC && State != RigidState.REST_DYNAMIC)
 			{
-				acceleration += Physics2D.Gravity / Mass;
+				acceleration += PhysicsSystem.Gravity / Mass;
 			}
 			
 			LinearVelocity += acceleration * dt / iterations;
 			
 			if (State != RigidState.REST_STATIC && State != RigidState.REST_DYNAMIC)
 			{
-				if (Physics2D.Gravity == ScrapVector.Zero)
+				if (PhysicsSystem.Gravity == ScrapVector.Zero)
 				{
 					LinearVelocity *= new ScrapVector(Drag, Drag);
 				}
@@ -81,7 +77,7 @@ namespace ScrapBox.Framework.ECS.Components
 			}
 			else
 			{
-				if (Physics2D.Gravity == ScrapVector.Zero)
+				if (PhysicsSystem.Gravity == ScrapVector.Zero)
 				{
 					LinearVelocity *= new ScrapVector(Friction, Friction);
 				}
@@ -96,68 +92,31 @@ namespace ScrapBox.Framework.ECS.Components
 			Force = ScrapVector.Zero;
 		}
 
-		public virtual void Awake()
+		public override void Awake()
 		{
-			Transform = Owner.GetComponent<Transform>();
-			if (Transform == null)
-			{
-				LogManager.Log(new LogMessage("RigidBody2D", "Missing dependency. Requires transform component to work.", LogMessage.Severity.ERROR));
+			bool success = Dependency(out Transform);
+			if (!success)
 				return;
-			}
-
-			if (!Transform.IsAwake)
-			{
-				LogManager.Log(new LogMessage("RigidBody2D", "Transform component is not awake... Aborting...", LogMessage.Severity.ERROR));
-				return;
-			}
 
 			if (Mass == 0 && !IsStatic)
-				LogManager.Log(new LogMessage("RigidBody2D", "Mass is 0 on dynamic body. This will cause unexpected behaviour", LogMessage.Severity.WARNING));
-
-			HasCollider = Owner.HasComponent<Collider>();
-
-			if (HasCollider)
             {
-				Collider = Owner.GetComponent<Collider>();
-			}
+				LogService.Log(Name, "Awake", "Mass is 0 on non-static object.", Severity.ERROR);
+				return;
+            }
 
-			if (IsStatic)
-			{
-				Physics2D.StaticBodies.Add(this);
-			}
-			else
-			{
-				Physics2D.DynamicBodies.Add(this);
-			}
+			PhysicsSystem physicsSystem = (PhysicsSystem)WorldManager.GetSystem<PhysicsSystem>();
+			physicsSystem.RegisterBody(this);
 
 			I = Mass * (Transform.Dimensions.X * Transform.Dimensions.X + Transform.Dimensions.Y * Transform.Dimensions.Y) / 12.0;
 			IsAwake = true;
 		}
 
-		public virtual void Sleep()
+		public override void Sleep()
         {
-			if (IsStatic)
-			{
-				Physics2D.StaticBodies.Remove(this);
-			}
-			else
-			{
-				Physics2D.DynamicBodies.Remove(this);
-			}
+			PhysicsSystem physicsSystem = (PhysicsSystem)WorldManager.GetSystem<PhysicsSystem>();
+			physicsSystem.PurgeBody(this);
 
 			IsAwake = false;
         }
-
-		public virtual void Update(double dt)
-		{
-			if (!IsAwake)
-				return;
-		}
-
-		public virtual void Draw(SpriteBatch spriteBatch, Camera camera)
-		{
-			if (!IsAwake)
-				return;
-		}
-	}
+    }
 }
