@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 using ScrapBox.Framework.Math;
+using ScrapBox.Framework.Generic;
 
 namespace ScrapBox.Framework.Shapes
 {
@@ -52,7 +53,7 @@ namespace ScrapBox.Framework.Shapes
         {
             if (start.X > end.X && start.Y > end.Y)
             {
-                ScrapMath.Swap(ref start, ref end);
+                Standard.Swap(ref start, ref end);
             }
 
             Start = start;

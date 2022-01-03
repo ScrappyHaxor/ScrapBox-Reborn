@@ -4,57 +4,11 @@ using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Generic;
 
 using ScrapBox.Framework.Services;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ScrapBox.Framework.Pathfinding
 {
-    public class NodeManifold
-    {
-        public readonly ScrapVector nodeCenter;
-        public readonly ScrapVector nodeTop;
-        public readonly ScrapVector nodeBottom;
-        public readonly ScrapVector nodeLeft;
-        public readonly ScrapVector nodeRight;
-
-        public readonly ScrapVector nodeTopRight;
-        public readonly ScrapVector nodeTopLeft;
-        public readonly ScrapVector nodeBottomRight;
-        public readonly ScrapVector nodeBottomLeft;
-
-        public NodeManifold(Node n, double nodeDistance)
-        {
-            nodeCenter = n.Position;
-            nodeTop = new ScrapVector(n.Position.X, n.Position.Y - nodeDistance / 2);
-            nodeBottom = new ScrapVector(n.Position.X, n.Position.Y + nodeDistance / 2);
-            nodeLeft = new ScrapVector(n.Position.X - nodeDistance / 2, n.Position.Y);
-            nodeRight = new ScrapVector(n.Position.X + nodeDistance / 2, n.Position.Y);
-
-            nodeTopRight = nodeTop + nodeRight;
-            nodeTopLeft = nodeTop + nodeLeft;
-            nodeBottomRight = nodeBottom + nodeRight;
-            nodeBottomLeft = nodeBottom + nodeLeft;
-        }
-
-        public List<ScrapVector> Points()
-        {
-            List<ScrapVector> points = new List<ScrapVector>();
-            points.Add(nodeCenter);
-            points.Add(nodeTop);
-            points.Add(nodeBottom);
-            points.Add(nodeLeft);
-            points.Add(nodeRight);
-
-            points.Add(nodeTopRight);
-            points.Add(nodeTopLeft);
-            points.Add(nodeBottomRight);
-            points.Add(nodeBottomLeft);
-
-            return points;
-        }
-
-        public static implicit operator ScrapVector(NodeManifold n) => n.nodeCenter;
-    }
-
-    public class Node : ICopyable<Node>
+    public class Node : ICopyable<Node>, IHeapItem<Node>
     {
         private const double DIAG = 0.7071067811865475;
 
@@ -63,15 +17,39 @@ namespace ScrapBox.Framework.Pathfinding
 
         public Node Parent { get; set; }
         public bool Evalulated { get; set; }
-        public double GCost { get; set; }
-        public double HCost { get; set; }
-        public double FCost { get { return GCost + HCost; } }
+        public int GCost { get; set; }
+        public int HCost { get; set; }
+        public int FCost { get { return GCost + HCost; } }
 
+        private int heapIndex;
+
+        public int HeapIndex 
+        {
+            get
+            {
+                return heapIndex;
+            }
+            set
+            {
+                heapIndex = value;
+            }
+        }
 
         public Node(ScrapVector position, bool blocked)
         {
             Position = position;
             Blocked = blocked;
+        }
+
+        public int CompareTo(Node compNode)
+        {
+            int comp = FCost.CompareTo(compNode.FCost);
+            if (comp == 0)
+            {
+                comp = HCost.CompareTo(compNode.HCost);
+            }
+
+            return -comp;
         }
 
         public Node Copy()
@@ -152,25 +130,6 @@ namespace ScrapBox.Framework.Pathfinding
             }
 
             return null;
-        }
-
-        public static Node LowestFCost(List<Node> nodes)
-        {
-            double lowest = double.MaxValue;
-            Node cheapest = null;
-            
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                Node n = nodes[i];
-
-                if (n.FCost < lowest || (n.FCost == lowest && n.HCost < cheapest.HCost))
-                {
-                    cheapest = nodes[i];
-                    lowest = n.FCost;
-                }
-            }
-
-            return cheapest;
         }
 
         public static implicit operator ScrapVector(Node n) => n.Position;

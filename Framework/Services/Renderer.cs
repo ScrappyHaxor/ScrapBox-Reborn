@@ -5,6 +5,7 @@ using ScrapBox.Framework.ECS.Components;
 using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Level;
 using ScrapBox.Framework.Diagnostics;
+using ScrapBox.Framework.Generic;
 
 namespace ScrapBox.Framework.Services
 {
@@ -225,7 +226,7 @@ namespace ScrapBox.Framework.Services
         {
             if (posA.X > posB.X && posA.Y > posB.Y)
             {
-                ScrapMath.Swap(ref posA, ref posB);
+                Standard.Swap(ref posA, ref posB);
             }
 
             BeginRender(color, camera, shader);
