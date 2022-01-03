@@ -233,6 +233,12 @@ namespace ScrapBox.Framework.Services
             }
 
             int pointIndex = ScrapMath.ClosestPointPolygon(b.Transform.Position, verts);
+            if (pointIndex == -1)
+            {
+                LogService.Log("Collision", "IntersectPolygonCircle", "Point not found on polygon", Severity.ERROR);
+                return false;
+            }
+
             ScrapVector point = verts[pointIndex];
 
             axis = b.Transform.Position - point;

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using System;
 
 using Microsoft.Xna.Framework;
 
@@ -25,9 +25,10 @@ namespace ScrapBox.Framework.Level
 
 		public virtual void Initialize()
         {
-            
-
-
+            MainCamera = new Camera(Graphics.GraphicsDevice.Viewport)
+            {
+                Zoom = 1
+            };
         }
 
         public virtual void LoadAssets()
@@ -42,17 +43,12 @@ namespace ScrapBox.Framework.Level
 
 		public virtual void Load()
         {
-            
 
-            MainCamera = new Camera(Graphics.GraphicsDevice.Viewport)
-            {
-                Zoom = 1
-            };
         }
 
         public virtual void Unload()
         {
-            MainCamera = null;
+
         }
 
 		public virtual void Update(double dt)

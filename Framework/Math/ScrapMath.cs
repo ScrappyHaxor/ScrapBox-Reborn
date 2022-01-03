@@ -2,7 +2,7 @@ using System;
 
 using Microsoft.Xna.Framework;
 
-using ScrapBox.Framework.Services;
+using ScrapBox.Framework.Level;
 
 namespace ScrapBox.Framework.Math
 {
@@ -142,7 +142,7 @@ namespace ScrapBox.Framework.Math
             for (int i = 0; i < verts.Length; i ++)
             {
                 ScrapVector v = verts[i];
-                double projection = ScrapMath.Dot(v, axis);
+                double projection = Dot(v, axis);
                 
                 if (projection < min)
                     min = projection;
@@ -194,6 +194,9 @@ namespace ScrapBox.Framework.Math
 
 		public static ScrapVector FindArithmeticMean(ScrapVector[] verts)
 		{
+			if (verts.Length == 0)
+				return default;
+
 			ScrapVector sum = ScrapVector.Zero;
 			foreach (ScrapVector vert in verts)
 			{
@@ -201,6 +204,12 @@ namespace ScrapBox.Framework.Math
 			}
 
 			return sum / verts.Length;
+		}
+
+		public static ScrapVector ScreenToWorldCoordinates(ScrapVector v, Camera camera)
+        {
+			Matrix inverseTransformMatrix = Matrix.Invert(camera.TransformationMatrix);
+			return ScrapVector.Transform(v, inverseTransformMatrix);
 		}
 
 		public static void GetCenteredRectangle(Rectangle source, out ScrapVector position, out ScrapVector dimensions)
@@ -269,6 +278,9 @@ namespace ScrapBox.Framework.Math
 
 		public static double RoundOnGrid(double n, double TileSize)
         {
+			if (TileSize == 0)
+				return default;
+
 			return Floor(((n + TileSize - 1) / TileSize)) * TileSize;
         }
 

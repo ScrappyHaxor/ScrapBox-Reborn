@@ -8,5 +8,6 @@ namespace ScrapBox.Framework.ECS
     {
         public abstract void Update(double dt);
         public abstract void Draw(Camera mainCamera);
+        public abstract void Reset();
     }
 }

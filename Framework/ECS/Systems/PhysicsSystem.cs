@@ -60,14 +60,22 @@ namespace ScrapBox.Framework.ECS.Systems
             }
         }
 
+        public override void Reset()
+        {
+            StaticBodies.Clear();
+            DynamicBodies.Clear();
+        }
+
         public override void Update(double dt)
         {
             watch.Restart();
-            
+
             //Apply forces
-            foreach (RigidBody2D body in DynamicBodies)
-            {
-                if (body.IsStatic || body.Kinematic)
+
+            for (int i = 0; i < DynamicBodies.Count; i++)
+            { 
+                RigidBody2D body = DynamicBodies[i];
+                if (!body.IsAwake)
                     continue;
 
                 body.ApplyForces(dt, 1);

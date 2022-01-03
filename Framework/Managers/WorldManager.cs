@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,6 +25,9 @@ namespace ScrapBox.Framework.Managers
         internal static bool Debug;
         internal static SpriteFont DebugFont;
 
+        internal static bool currentSceneBusy;
+        internal static bool swappingScene;
+
         static WorldManager()
         {
             BackColor = Color.Black;
@@ -43,6 +47,9 @@ namespace ScrapBox.Framework.Managers
             ParticleSystem particleSystem = new ParticleSystem();
             RegisterSystem(particleSystem);
 
+            InterfaceSystem interfaceSystem = new InterfaceSystem();
+            RegisterSystem(interfaceSystem);
+
             Entities = new List<Entity>();
         }
 
@@ -53,28 +60,48 @@ namespace ScrapBox.Framework.Managers
 
         public static void SwapScene(string name)
         {
-            if (CurrentScene != null)
+            Thread t = new Thread(delegate ()
             {
-                foreach (Entity e in Entities)
+                while (currentSceneBusy)
                 {
-                    e.Sleep();
+                    Thread.Sleep(1);
                 }
-                Entities.Clear();
 
-                CurrentScene.Unload();
-                CurrentScene.UnloadAssets();
-            }
+                swappingScene = true;
+                if (CurrentScene != null)
+                {
+                    for (int i = 0; i < Entities.Count; i++)
+                    {
+                        Entity e = Entities[i];
+                        e.Sleep();
+                    }
+                    Entities.Clear();
 
-            bool success = Scenes.TryGetValue(name, out CurrentScene);
-            if (!success)
-            {
-                LogService.Log("WorldManager", "SwapScene", $"Scene \"{name}\" does not exist.", Severity.ERROR);
-                return;
-            }
+                    foreach (ComponentSystem system in Systems)
+                    {
+                        system.Reset();
+                    }
 
-            CurrentScene.Initialize();
-            CurrentScene.LoadAssets();
-            CurrentScene.Load();
+                    CurrentScene.Unload();
+                    CurrentScene.UnloadAssets();
+                }
+
+                bool success = Scenes.TryGetValue(name, out CurrentScene);
+                if (!success)
+                {
+                    LogService.Log("WorldManager", "SwapScene", $"Scene \"{name}\" does not exist.", Severity.ERROR);
+                    return;
+                }
+
+                CurrentScene.Initialize();
+                CurrentScene.LoadAssets();
+                CurrentScene.Load();
+
+                swappingScene = false;
+            });
+
+            t.Start();
+
         }
 
         public static void EnableDebug(SpriteFont debugFont)
@@ -154,8 +181,10 @@ namespace ScrapBox.Framework.Managers
 
         internal static void Update(double dt)
         {
-            if (CurrentScene == null)
+            if (CurrentScene == null || swappingScene)
                 return;
+
+            currentSceneBusy = true;
 
             foreach (ComponentSystem system in Systems)
             {
@@ -172,7 +201,7 @@ namespace ScrapBox.Framework.Managers
 
         internal static void Draw()
         {
-            if (CurrentScene == null)
+            if (CurrentScene == null || swappingScene)
                 return;
 
             foreach (ComponentSystem system in Systems)
@@ -192,6 +221,8 @@ namespace ScrapBox.Framework.Managers
             }
 
             CurrentScene.Draw();
+
+            currentSceneBusy = false;
         }
     }
 }

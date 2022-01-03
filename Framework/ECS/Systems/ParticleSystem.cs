@@ -12,7 +12,7 @@ namespace ScrapBox.Framework.ECS.Systems
 {
     internal class Particle : Entity
     {
-        public override string Name => "ScrapBox Particle";
+        public override string Name => "Particle";
 
         public Transform Transform { get; set; }
         public Sprite2D Sprite { get; set; }
@@ -85,10 +85,19 @@ namespace ScrapBox.Framework.ECS.Systems
             emitters.Remove(emitter);
         }
 
+        public override void Reset()
+        {
+            emitters.Clear();
+        }
+
         public override void Update(double dt)
         {
-            foreach (Emitter2D emitter in emitters)
+            for (int i = 0; i < emitters.Count; i++)
             {
+                Emitter2D emitter = emitters[i];
+                if (!emitter.IsAwake)
+                    continue;
+
                 emitter.Tick(dt);
             }
         }

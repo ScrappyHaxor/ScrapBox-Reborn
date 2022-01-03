@@ -77,6 +77,9 @@ namespace ScrapBox.Framework.Managers
 
         public static void Unload(ContentManager content)
         {
+            textureRegister.Clear();
+            fontRegister.Clear();
+            shaderRegister.Clear();
             content.Unload();
         }
 

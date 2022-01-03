@@ -35,6 +35,11 @@ namespace ScrapBox.Framework.ECS.Systems
             Sprites--;
         }
 
+        public override void Reset()
+        {
+            sprites.Clear();
+        }
+
         public override void Update(double dt)
         {
             
@@ -45,6 +50,9 @@ namespace ScrapBox.Framework.ECS.Systems
             watch.Restart();
             foreach (Sprite2D sprite in sprites)
             {
+                if (!sprite.IsAwake)
+                    continue;
+
                 Renderer.RenderSprite(sprite, mainCamera);
             }
 

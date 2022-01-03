@@ -95,6 +95,12 @@ namespace ScrapBox.Framework.ECS.Systems
             colliders.Remove(collider);
         }
 
+        public override void Reset()
+        {
+            colliders.Clear();
+            reports.Clear();
+        }
+
         /// <summary>
         /// Raycasts collider
         /// </summary>

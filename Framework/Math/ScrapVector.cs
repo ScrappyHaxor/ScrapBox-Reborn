@@ -12,7 +12,7 @@ namespace ScrapBox.Framework.Math
 		
 		public ScrapVector(double x)
 		{
-			if (x == -0)
+			if (x == -0 || double.IsNaN(x))
             {
 				x = 0;
             }
@@ -23,12 +23,12 @@ namespace ScrapBox.Framework.Math
 
 		public ScrapVector(double x, double y)
 		{
-			if (x == -0)
+			if (x == -0 || double.IsNaN(x))
             {
 				x = 0;
             }
 
-			if (y == -0)
+			if (y == -0 || double.IsNaN(y))
             {
 				y = 0;
             }
@@ -39,12 +39,12 @@ namespace ScrapBox.Framework.Math
 
 		public ScrapVector(Vector2 v)
         {
-			if (v.X == -0)
+			if (v.X == -0 || double.IsNaN(v.X))
             {
 				v.X = 0;
             }
 
-			if (v.Y == -0)
+			if (v.Y == -0 || double.IsNaN(v.Y))
             {
 				v.Y = 0;
             }
@@ -141,5 +141,8 @@ namespace ScrapBox.Framework.Math
 		}
 
 		public static implicit operator Vector2(ScrapVector v) => new Vector2((float)v.X, (float)v.Y);
+		public static implicit operator Vector3(ScrapVector v) => new Vector3((float)v.X, (float)v.Y, 0);
+
+		public static explicit operator ScrapVector(Vector2 v) => new ScrapVector(v.X, v.Y);
 	}
 }
