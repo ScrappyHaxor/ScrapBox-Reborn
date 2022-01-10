@@ -31,6 +31,9 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Awake()
 		{
+			if (IsAwake)
+				return;
+
 			bool success = Dependency(out Transform);
 			if (!success)
 				return;
@@ -44,15 +47,16 @@ namespace ScrapBox.Framework.ECS.Components
 			if (SourceRectangle == default)
 				SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
 
-			SpriteSystem spriteSystem = (SpriteSystem)WorldManager.GetSystem<SpriteSystem>();
-			spriteSystem.RegisterSprite(this);
+			WorldManager.GetSystem<SpriteSystem>().RegisterSprite(this);
 			IsAwake = true;
 		}
 
 		public override void Sleep()
         {
-			SpriteSystem spriteSystem = (SpriteSystem)WorldManager.GetSystem<SpriteSystem>();
-			spriteSystem.PurgeSprite(this);
+			if (!IsAwake)
+				return;
+
+			WorldManager.GetSystem<SpriteSystem>().PurgeSprite(this);
 			IsAwake = false;
         }
 	}

@@ -134,6 +134,13 @@ namespace ScrapBox.Framework.Math
 					Sin(theta) * (p.X - o.X) + Cos(theta) * (p.Y-o.Y) + o.Y);
 		}
 
+		public static ScrapVector RotatePoint(ScrapVector p, double theta)
+        {
+			return new ScrapVector(
+				Cos(theta) * p.X - Sin(theta) * p.Y, 
+				Sin(theta) * p.X + Cos(theta) * p.Y);
+        }
+
         public static void ProjectVerticies(ScrapVector[] verts, ScrapVector axis, out double min, out double max)
         {
             min = float.MaxValue;

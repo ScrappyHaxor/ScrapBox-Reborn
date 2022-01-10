@@ -28,6 +28,9 @@ namespace ScrapBox.Framework.ECS.Components
 
         public override void Awake()
         {
+            if (IsAwake)
+                return;
+
             base.Awake();
 
             if (Shape == null)
@@ -51,24 +54,7 @@ namespace ScrapBox.Framework.ECS.Components
             }
         }
 
-        public override void Sleep()
-        {
-            base.Sleep();
-        }
-
-        public override void Render(Camera mainCamera)
-        {
-            if (Hovered)
-            {
-                Renderer.RenderPolygonOutline(Shape.GetVerticies(), HoverColor, mainCamera);
-            }
-            else
-            {
-                Renderer.RenderPolygonOutline(Shape.GetVerticies(), BorderColor, mainCamera);
-            }
-        }
-
-        public override void Tick()
+        internal override void Tick()
         {
             Shape.Center = Transform.Position;
             Shape.Dimensions = Transform.Dimensions;
@@ -84,6 +70,22 @@ namespace ScrapBox.Framework.ECS.Components
             {
                 Hovered = false;
             }
+
+            base.Tick();
+        }
+
+        internal override void Render(Camera mainCamera)
+        {
+            if (Hovered)
+            {
+                Renderer.RenderPolygonOutline(Shape.GetVerticies(), HoverColor, mainCamera);
+            }
+            else
+            {
+                Renderer.RenderPolygonOutline(Shape.GetVerticies(), BorderColor, mainCamera);
+            }
+
+            base.Render(mainCamera);
         }
     }
 }

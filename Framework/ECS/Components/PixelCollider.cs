@@ -17,6 +17,9 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Awake()
 		{
+			if (IsAwake)
+				return;
+
 			Algorithm = CollisionAlgorithm.SAT_PIXEL;
 
 			bool success = Dependency(out Sprite);

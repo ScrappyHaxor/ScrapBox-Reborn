@@ -94,6 +94,9 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Awake()
 		{
+			if (IsAwake)
+				return;
+
 			bool success = Dependency(out Transform);
 			if (!success)
 				return;
@@ -104,18 +107,18 @@ namespace ScrapBox.Framework.ECS.Components
 				return;
             }
 
-			PhysicsSystem physicsSystem = (PhysicsSystem)WorldManager.GetSystem<PhysicsSystem>();
-			physicsSystem.RegisterBody(this);
-
 			I = Mass * (Transform.Dimensions.X * Transform.Dimensions.X + Transform.Dimensions.Y * Transform.Dimensions.Y) / 12.0;
+
+			WorldManager.GetSystem<PhysicsSystem>().RegisterBody(this);
 			IsAwake = true;
 		}
 
 		public override void Sleep()
         {
-			PhysicsSystem physicsSystem = (PhysicsSystem)WorldManager.GetSystem<PhysicsSystem>();
-			physicsSystem.PurgeBody(this);
+			if (!IsAwake)
+				return;
 
+			WorldManager.GetSystem<PhysicsSystem>().PurgeBody(this);
 			IsAwake = false;
         }
     }

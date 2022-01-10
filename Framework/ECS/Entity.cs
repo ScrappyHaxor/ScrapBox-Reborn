@@ -41,7 +41,7 @@ namespace ScrapBox.Framework.ECS
 				return false;
 			}
 
-			entity = (T)WorldManager.GetEntity<T>();
+			entity = WorldManager.GetEntity<T>();
 			if (!entity.IsAwake)
 			{
 				if (!optional)
@@ -102,7 +102,10 @@ namespace ScrapBox.Framework.ECS
 		}
 
 		public virtual void Awake() 
-		{ 
+		{
+			if (IsAwake)
+				return;
+
 			foreach (Component component in register)
 			{
 				component.Awake();
@@ -114,6 +117,9 @@ namespace ScrapBox.Framework.ECS
 
 		public virtual void Sleep()
         {
+			if (!IsAwake)
+				return;
+
 			foreach (Component component in register)
             {
 				component.Sleep();

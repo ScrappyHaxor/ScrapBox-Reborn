@@ -42,7 +42,7 @@ namespace ScrapBox.Framework.Shapes
         }
 
         public double Radius;
-        private int points;
+        private readonly int points;
 
         public ScrapCircle(ScrapVector position, double radius, int points)
         {

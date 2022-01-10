@@ -18,6 +18,9 @@ namespace ScrapBox.Framework.ECS.Components
 
         public override void Awake()
         {
+            if (IsAwake)
+                return;
+
             Algorithm = CollisionAlgorithm.SAT_CIRCLE;
 
             base.Awake();

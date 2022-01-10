@@ -13,11 +13,17 @@ namespace ScrapBox.Framework.ECS.Components
 		
 		public override void Awake()
 		{
+			if (IsAwake)
+				return;
+
 			IsAwake = true;
 		}
 
 		public override void Sleep()
         {
+			if (!IsAwake)
+				return;
+
 			IsAwake = false;
         }
 	}

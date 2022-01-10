@@ -14,10 +14,15 @@ namespace ScrapBox.Framework.Services
         public static SpriteBatch Batch { get { return batch; } }
         public static Texture2D Pixel { get { return pixel; } }
 
+        public static Effect PostProcessing { get; set; }
+
+        public static Color ClearColor { get; set; }
+
         internal static SpriteBatch batch;
         internal static Texture2D pixel;
         internal static Color pixelColor;
         internal static BasicEffect defaultShader;
+        internal static RenderTarget2D renderTarget;
 
         public const int MAX_CIRCLE_POINTS = 256;
         public const int MIN_CIRCLE_POINTS = 8;
@@ -28,19 +33,40 @@ namespace ScrapBox.Framework.Services
 
         internal static void Initialize(SpriteBatch spriteBatch)
         {
-            LogService.Log("Renderer2D", "Initialize", "Renderer successfully initialized.", Severity.INFO);
+            
             batch = spriteBatch;
             pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             pixel.SetData(new Color[] { new Color(255, 255, 255, 255) });
             pixelColor = new Color(255, 255, 255, 255);
+
             defaultShader = new BasicEffect(batch.GraphicsDevice)
             {
                 Texture = pixel,
                 TextureEnabled = true
             };
+
+            renderTarget = new RenderTarget2D(Batch.GraphicsDevice,
+                batch.GraphicsDevice.PresentationParameters.BackBufferWidth, batch.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                batch.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.Depth24);
+
+            LogService.Log("Renderer2D", "Initialize", "Renderer successfully initialized.", Severity.INFO);
         }
 
-        internal static void BeginRender(Color? color = null, Camera camera = null, Effect shader = null)
+        internal static void BeginSceneRender()
+        {
+            Batch.GraphicsDevice.SetRenderTarget(renderTarget);
+            Batch.GraphicsDevice.Clear(ClearColor);
+            Batch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
+        }
+
+        public static void BeginRenderToTexture(RenderTarget2D renderTarget)
+        {
+            Batch.GraphicsDevice.SetRenderTarget(renderTarget);
+        }
+
+        internal static void BeginRender(Color? color = null, Camera camera = null, Effect shader = null, SamplerState sampler = null)
         {
             if (batch == null)
             {
@@ -63,7 +89,7 @@ namespace ScrapBox.Framework.Services
             }
 
             begunRendering = true;
-            Batch.Begin(transformMatrix: transformationMatrix, effect: shader, samplerState: SamplerState.PointClamp, sortMode: SpriteSortMode.Immediate);
+            Batch.Begin(transformMatrix: transformationMatrix, effect: shader, samplerState: sampler, sortMode: SpriteSortMode.Immediate);
         }
 
         internal static void EndRender()
@@ -73,6 +99,21 @@ namespace ScrapBox.Framework.Services
 
             begunRendering = false;
             Batch.End();
+        }
+
+        public static void EndRenderToTexture()
+        {
+            Batch.GraphicsDevice.SetRenderTarget(null);
+        }
+
+        internal static void EndSceneRender()
+        {
+            Batch.GraphicsDevice.SetRenderTarget(null);
+
+            Batch.GraphicsDevice.Clear(ClearColor);
+            batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, effect: PostProcessing);
+            batch.Draw(renderTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
+            batch.End();
         }
 
         #region RenderSprite
@@ -111,12 +152,8 @@ namespace ScrapBox.Framework.Services
             //Culling
             if (camera != null)
             {
-                Rectangle visibleArea = camera.VisibleArea;
-                if (position.X + dimensions.X < visibleArea.X || position.X - dimensions.X > visibleArea.X + visibleArea.Width ||
-                    position.Y + dimensions.Y < visibleArea.Y || position.Y - dimensions.Y > visibleArea.Y + visibleArea.Height)
-                {
+                if (!camera.InView(position, dimensions))
                     return;
-                }
             }
 
             ScrapVector origin;
@@ -132,7 +169,7 @@ namespace ScrapBox.Framework.Services
 
             RenderDiagnostics.Calls++;
 
-            BeginRender(null, camera, shader);            
+            BeginRender(null, camera, shader, SamplerState.PointClamp);            
             batch.Draw(texture, bounds, sourceRectangle, tintColor, rotation, origin, effects, depth);
             EndRender();
         }
@@ -154,7 +191,7 @@ namespace ScrapBox.Framework.Services
             ScrapVector origin = new ScrapVector(0, 0.5f);
             ScrapVector scale = new ScrapVector(length, thickness);
 
-            BeginRender(color, camera, shader);
+            BeginRender(color, camera, shader, SamplerState.PointClamp);
             batch.Draw(pixel, point, null, color, (float)theta, origin, scale, SpriteEffects.None, 0);
             EndRender();
         }
@@ -186,13 +223,6 @@ namespace ScrapBox.Framework.Services
                 borderColor = fillColor;
             }
 
-            //VertexPositionColor[] vertsPosTextures = new VertexPositionColor[verts.Length];
-            //for (int i = 0; i < vertsPosTextures.Length; i++)
-            //{
-            //    VertexPositionColor vertPosTexture = vertsPosTextures[i];
-            //    vertPosTexture.Position = verts[i];
-            //}
-
             defaultShader.Texture.SetData(new Color[] { fillColor });
 
             VertexPositionColor[] vertsPosColors = new VertexPositionColor[4];
@@ -217,20 +247,8 @@ namespace ScrapBox.Framework.Services
 
             RenderDiagnostics.Calls++;
 
-            BeginRender(color, camera, shader);
+            BeginRender(color, camera, shader, SamplerState.PointClamp);
             batch.Draw(pixel, bounds, null, color, rotation, center, SpriteEffects.None, 0);
-            EndRender();
-        }
-
-        public static void RenderBox(ScrapVector posA, ScrapVector posB, Color color, Camera camera = null, Effect shader = null)
-        {
-            if (posA.X > posB.X && posA.Y > posB.Y)
-            {
-                Standard.Swap(ref posA, ref posB);
-            }
-
-            BeginRender(color, camera, shader);
-            batch.Draw(pixel, new Rectangle((int)posA.X, (int)posA.Y, (int)(posB.X - posA.X), (int)(posB.Y - posA.Y)), color);            
             EndRender();
         }
 
@@ -241,7 +259,7 @@ namespace ScrapBox.Framework.Services
 
             RenderDiagnostics.Calls++;
 
-            BeginRender(color, camera, shader);
+            BeginRender(color, camera, shader, SamplerState.PointClamp);
             batch.Draw(pixel, new Rectangle(bounds.X, bounds.Y - bounds.Height / 2, bounds.Width, 1), null, color, rotation, center, SpriteEffects.None, 0);
             batch.Draw(pixel, new Rectangle(bounds.X, bounds.Y + bounds.Height / 2, bounds.Width, 1), null, color, rotation, center, SpriteEffects.None, 0);
             batch.Draw(pixel, new Rectangle(bounds.X - bounds.Width / 2, bounds.Y, 1, bounds.Height), null, color, rotation, center, SpriteEffects.None, 0);
@@ -273,8 +291,6 @@ namespace ScrapBox.Framework.Services
 
         public static void RenderGrid(ScrapVector pointA, ScrapVector pointB, ScrapVector tileSize, Color color, Camera camera = null, Effect shader = null, double thickness = 1)
         {
-            RenderDiagnostics.Calls++;
-
             for (double x = pointA.X; x < pointB.X; x += tileSize.X)
             {
                 for (double y = pointA.Y; y < pointB.Y; y += tileSize.Y)

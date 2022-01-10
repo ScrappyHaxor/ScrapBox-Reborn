@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Framework.Services;
@@ -10,6 +11,12 @@ using ScrapBox.Framework.ECS.Systems;
 
 namespace ScrapBox.Framework.ECS.Components
 {
+    public enum EmitterType
+    {
+        CONE,
+        CIRCLE
+    }
+
     public class Emitter2D : Component
     {
         public override string Name => "Emitter2D";
@@ -19,10 +26,13 @@ namespace ScrapBox.Framework.ECS.Components
         public List<Sprite2D> Sprites { get; set; }
         public int LifeSpan { get; set; }
         public int MaxParticles { get; set; }
-        public ScrapVector LinearVelocity { get; set; }
-        public ScrapVector AngularVelocity { get; set; }
+        public double LinearVelocity { get; set; }
+        public double AngularVelocity { get; set; }
         public (int, int) MinDeviation { get; set; }
         public (int, int) MaxDeviation { get; set; }
+        public ScrapVector ParticleSize { get; set; }
+
+        public EmitterType TypeOfEmitter { get; set; }
 
         internal readonly List<Particle> Particles;
 
@@ -46,10 +56,22 @@ namespace ScrapBox.Framework.ECS.Components
 
         internal void GenerateParticle()
         {
-            Texture2D randTexture = Sprites[rand.Next(Sprites.Count)].Texture;
-            Particle newParticle = new Particle(Transform.Position, randTexture, LifeSpan);
+            Sprite2D randSprite = Sprites[rand.Next(Sprites.Count)];
+            Texture2D randTexture = randSprite.Texture;
+            Particle newParticle = new Particle(Transform.Position, ParticleSize, randSprite.TintColor, randTexture, LifeSpan);
 
-            newParticle.Rigidbody.AddForce(LinearVelocity + CalcualteDeviation());
+            if (TypeOfEmitter == EmitterType.CONE)
+            {
+                newParticle.Rigidbody.AddForce(ScrapMath.RotatePoint(new ScrapVector(LinearVelocity, 0) + CalcualteDeviation(), Transform.Rotation));
+            }
+            else
+            {
+                double random = rand.Next(0, 360);
+
+                newParticle.Rigidbody.AddForce(LinearVelocity * new ScrapVector(ScrapMath.Cos(random), ScrapMath.Sin(random)));
+            }
+
+            
             newParticle.Awake();
 
             Particles.Add(newParticle);
@@ -57,6 +79,9 @@ namespace ScrapBox.Framework.ECS.Components
 
         public override void Awake()
         {
+            if (IsAwake)
+                return;
+
             bool success = Dependency(out Transform);
             if (!success)
                 return;
@@ -67,18 +92,24 @@ namespace ScrapBox.Framework.ECS.Components
                 return;
             }
 
-            ParticleSystem particleSystem = (ParticleSystem)WorldManager.GetSystem<ParticleSystem>();
-            particleSystem.RegisterEmitter(this);
+            //if (ParticleSize == ScrapVector.Zero)
+            //{
+            //    ParticleSize = Transform.Dimensions;
+            //}
+
+            WorldManager.GetSystem<ParticleSystem>().RegisterEmitter(this);
             IsAwake = true;
         }
 
 
         public override void Sleep()
         {
+            if (!IsAwake)
+                return;
+
             Particles.Clear();
             //Improve this by adding auto remove of sleeping components to World
-            ParticleSystem particleSystem = (ParticleSystem)WorldManager.GetSystem<ParticleSystem>();
-            particleSystem.PurgeEmitter(this);
+            WorldManager.GetSystem<ParticleSystem>().PurgeEmitter(this);
             IsAwake = false;
         }
 

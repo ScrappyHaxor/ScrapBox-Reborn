@@ -14,32 +14,34 @@ namespace ScrapBox.Framework.ECS
     {
         public Transform Transform;
 
-        private InterfaceSystem interfaceSystem;
-
         public override void Awake()
         {
+            if (IsAwake)
+                return;
+
             bool success = Dependency(out Transform);
             if (!success)
                 return;
 
-            interfaceSystem = (InterfaceSystem)WorldManager.GetSystem<InterfaceSystem>();
-            interfaceSystem.RegisterInterface(this);
-
+            WorldManager.GetSystem<InterfaceSystem>().RegisterInterface(this);
             IsAwake = true;
         }
 
         public override void Sleep()
         {
-            interfaceSystem.PurgeInterface(this);
+            if (!IsAwake)
+                return;
+
+            WorldManager.GetSystem<InterfaceSystem>().PurgeInterface(this);
             IsAwake = false;
         }
 
-        public virtual void Tick()
+        internal virtual void Tick()
         {
 
         }
 
-        public virtual void Render(Camera mainCamera)
+        internal virtual void Render(Camera mainCamera)
         {
 
         }

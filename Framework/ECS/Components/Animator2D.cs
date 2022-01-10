@@ -161,6 +161,9 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Awake()
 		{
+			if (IsAwake)
+				return;
+
 			bool success = Dependency(out Sprite);
 			if (!success)
 				return;
@@ -177,6 +180,9 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public override void Sleep()
         {
+			if (!IsAwake)
+				return;
+
 			IsAwake = false;
         }
 	}

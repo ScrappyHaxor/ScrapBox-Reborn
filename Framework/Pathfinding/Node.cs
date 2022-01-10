@@ -8,10 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ScrapBox.Framework.Pathfinding
 {
-    public class Node : ICopyable<Node>, IHeapItem<Node>
+    public class Node : IHeapItem<Node>
     {
-        private const double DIAG = 0.7071067811865475;
-
         public ScrapVector Position { get; set; }
         public bool Blocked { get; set; }
 
@@ -52,84 +50,63 @@ namespace ScrapBox.Framework.Pathfinding
             return -comp;
         }
 
-        public Node Copy()
-        {
-            return new Node(Position, Blocked);
-        }
-
-        public Node[] Neighbors(List<Node> nodes, bool diagonal = true)
+        public Node[] Neighbors(Dictionary<(double, double), Node> nodes, double NodeDistance, bool diagonal = true)
         {
             Node[] neighbors = new Node[8];
 
-            neighbors[0] = ClosestInDirection(new ScrapVector(0, 1), nodes); // down
-            neighbors[1] = ClosestInDirection(new ScrapVector(0, -1), nodes); // up
-            neighbors[2] = ClosestInDirection(new ScrapVector(1, 0), nodes); // right
-            neighbors[3] = ClosestInDirection(new ScrapVector(-1, 0), nodes); // left
+            if (nodes.ContainsKey((Position.X, Position.Y + NodeDistance)))
+            {
+                neighbors[0] = nodes[(Position.X, Position.Y + NodeDistance)];
+            }
+
+            if (nodes.ContainsKey((Position.X, Position.Y - NodeDistance)))
+            {
+                neighbors[1] = nodes[(Position.X, Position.Y - NodeDistance)];
+            }
+
+            if (nodes.ContainsKey((Position.X + NodeDistance, Position.Y)))
+            {
+                neighbors[2] = nodes[(Position.X + NodeDistance, Position.Y)];
+            }
+
+            if (nodes.ContainsKey((Position.X - NodeDistance, Position.Y)))
+            {
+                neighbors[3] = nodes[(Position.X - NodeDistance, Position.Y)];
+            }
+
             
             if (diagonal)
             {
-                if (neighbors[1] != null && neighbors[3] != null && !neighbors[1].Blocked && !neighbors[3].Blocked)
+                if (neighbors[1] != null && neighbors[3] != null && !neighbors[1].Blocked && !neighbors[3].Blocked &&
+                    nodes.ContainsKey((Position.X - NodeDistance, Position.Y - NodeDistance)))
                 {
                     //Top left
-                    neighbors[4] = ClosestInDirection(new ScrapVector(-DIAG, -DIAG), nodes);
+                    neighbors[4] = nodes[(Position.X - NodeDistance, Position.Y - NodeDistance)];
                 }
 
-                if (neighbors[1] != null && neighbors[2] != null && !neighbors[1].Blocked && !neighbors[2].Blocked)
+                if (neighbors[1] != null && neighbors[2] != null && !neighbors[1].Blocked && !neighbors[2].Blocked &&
+                    nodes.ContainsKey((Position.X + NodeDistance, Position.Y - NodeDistance)))
                 {
                     //Top right
-                    neighbors[5] = ClosestInDirection(new ScrapVector(DIAG, -DIAG), nodes);
+                    neighbors[5] = nodes[(Position.X + NodeDistance, Position.Y - NodeDistance)];
                 }
 
-                if (neighbors[0] != null && neighbors[3] != null && !neighbors[0].Blocked && !neighbors[3].Blocked)
+                if (neighbors[0] != null && neighbors[3] != null && !neighbors[0].Blocked && !neighbors[3].Blocked &&
+                    nodes.ContainsKey((Position.X - NodeDistance, Position.Y + NodeDistance)))
                 {
                     //Bottom left
-                    neighbors[6] = ClosestInDirection(new ScrapVector(-DIAG, DIAG), nodes); //Bottom right
+                    neighbors[6] = nodes[(Position.X - NodeDistance, Position.Y + NodeDistance)];
                 }
 
-                if (neighbors[0] != null && neighbors[2] != null && !neighbors[0].Blocked && !neighbors[2].Blocked)
+                if (neighbors[0] != null && neighbors[2] != null && !neighbors[0].Blocked && !neighbors[2].Blocked &&
+                    nodes.ContainsKey((Position.X + NodeDistance, Position.Y + NodeDistance)))
                 {
                     //Bottom right
-                    neighbors[7] = ClosestInDirection(new ScrapVector(DIAG, DIAG), nodes); // Bottom left
+                    neighbors[7] = nodes[(Position.X + NodeDistance, Position.Y + NodeDistance)];
                 }
             }
 
             return neighbors;
-        }
-
-        public Node ClosestInDirection(ScrapVector direction, List<Node> nodes)
-        {
-            double minDistance = double.MaxValue;
-            int index = -1;
-
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                Node n = nodes[i];
-                if (ScrapMath.Normalize(n - Position) != direction)
-                    continue;
-
-                double d = ScrapMath.Distance(n, Position);
-                if (d < minDistance)
-                {
-                    minDistance = d;
-                    index = i;
-                }
-            }
-
-            if (index == -1)
-                return null;
-
-            return nodes[index];
-        }
-
-        public static Node FindNode(ScrapVector position, List<Node> nodes)
-        {
-            foreach (Node n in nodes)
-            {
-                if (n == position)
-                    return n;
-            }
-
-            return null;
         }
 
         public static implicit operator ScrapVector(Node n) => n.Position;

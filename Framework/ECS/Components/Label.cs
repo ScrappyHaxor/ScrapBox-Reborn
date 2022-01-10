@@ -20,6 +20,9 @@ namespace ScrapBox.Framework.ECS.Components
 
         public override void Awake()
         {
+            if (IsAwake)
+                return;
+
             if (Font == null)
             {
                 LogService.Log(Name, "Awake", "No font provided.", Severity.ERROR);
@@ -39,9 +42,10 @@ namespace ScrapBox.Framework.ECS.Components
             base.Awake();
         }
 
-        public override void Render(Camera mainCamera)
+        internal override void Render(Camera mainCamera)
         {
             Renderer.RenderCenteredText(Font, Text, Transform.Position, TextColor, mainCamera);
+            base.Render(mainCamera);
         }
     }
 }

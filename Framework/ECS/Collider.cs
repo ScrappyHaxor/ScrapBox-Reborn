@@ -53,6 +53,9 @@ namespace ScrapBox.Framework.ECS
 
         public override void Awake()
         {
+			if (IsAwake)
+				return;
+
 			bool success = Dependency(out Transform);
 			if (!success)
 				return;
@@ -61,17 +64,16 @@ namespace ScrapBox.Framework.ECS
 			if (!success)
 				return;
 
-			CollisionSystem collisionSystem = (CollisionSystem)WorldManager.GetSystem<CollisionSystem>();
-			collisionSystem.RegisterCollider(this);
-
+			WorldManager.GetSystem<CollisionSystem>().RegisterCollider(this);
 			IsAwake = true;
         }
 
 		public override void Sleep()
 		{
-			CollisionSystem collisionSystem = (CollisionSystem)WorldManager.GetSystem<CollisionSystem>();
-			collisionSystem.PurgeCollider(this);
+			if (!IsAwake)
+				return;
 
+			WorldManager.GetSystem<CollisionSystem>().PurgeCollider(this);
 			IsAwake = false;
 		}
     }

@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework;
 using ScrapBox.Framework.Math;
 using ScrapBox.Framework.ECS;
 using ScrapBox.Framework.ECS.Components;
+using ScrapBox.Framework.Level;
+using ScrapBox.Framework.Managers;
 
 namespace ScrapBox.Framework.Services
 {
@@ -50,6 +52,17 @@ namespace ScrapBox.Framework.Services
 
             //This method is probably going to be very ugly but oh well.
             //It needs some serious reworking in the future, this shit is gonna be so hard to maintain
+
+            //Culling
+            Camera camera = WorldManager.CurrentScene.MainCamera;
+            if (camera != null)
+            {
+                if (!camera.InView(a.Transform.Position, a.Transform.Dimensions))
+                    return false;
+
+                if (!camera.InView(b.Transform.Position, b.Transform.Dimensions))
+                    return false;
+            }
 
             if (a.Algorithm == Collider.CollisionAlgorithm.SAT)
             {

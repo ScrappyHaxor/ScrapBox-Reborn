@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using ScrapBox.Framework.Generic;
+using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Math;
 
@@ -9,7 +11,7 @@ namespace ScrapBox.Framework.Pathfinding
 {
     public class NodeMap
     {
-        private readonly List<Node> Nodes;
+        private readonly Dictionary<(double, double), Node> Nodes;
 
         private double minX;
         private double minY;
@@ -18,6 +20,7 @@ namespace ScrapBox.Framework.Pathfinding
         private double maxY;
 
         public double NodeDistance { get; set; }
+        public bool DiagonalMovement { get; set; }
 
         public double MaxSize
         {
@@ -30,7 +33,8 @@ namespace ScrapBox.Framework.Pathfinding
 
         public NodeMap()
         {
-            Nodes = new List<Node>();
+            Nodes = new Dictionary<(double, double), Node>();
+            DiagonalMovement = true;
 
             minX = double.MaxValue;
             minY = double.MaxValue;
@@ -43,13 +47,18 @@ namespace ScrapBox.Framework.Pathfinding
         {
             if (NodeDistance == 0)
             {
-                LogService.Log("NodeMap", "Navigate", "Node Distance is 0.", Severity.ERROR);
+                LogService.Log("NodeMap", "RegisterNode", "Node Distance is 0.", Severity.ERROR);
+                return;
+            }
+
+            if (position.X % NodeDistance != 0 || position.Y % NodeDistance != 0)
+            {
+                LogService.Log("NodeMap", "RegisterNode", "Node is not on grid", Severity.ERROR);
                 return;
             }
 
             Node newNode = new Node(position, solid);
-            Nodes.Add(newNode);
-
+            Nodes.Add((position.X, position.Y), newNode);
 
             if (newNode.Position.X < minX)
             {
@@ -72,7 +81,12 @@ namespace ScrapBox.Framework.Pathfinding
             }
         }
 
-        private List<ScrapVector> RetraceSteps(Node startNode, Node endNode)
+        internal void Purge()
+        {
+            Nodes.Clear();
+        }
+
+        private ScrapVector[] RetraceSteps(Node startNode, Node endNode)
         {
             List<ScrapVector> path = new List<ScrapVector>();
             Node currentNode = endNode;
@@ -82,46 +96,56 @@ namespace ScrapBox.Framework.Pathfinding
                 path.Add(currentNode);
                 currentNode = currentNode.Parent;
             }
-            
+
             path.Reverse();
 
-            return path;
+            return path.ToArray();
         }
 
-        public bool Navigate(ScrapVector a, ScrapVector b, out List<ScrapVector> path, bool diagonalMovement = true)
+        internal void Navigate(NavigationRequest request)
         {
-            path = new List<ScrapVector>();
-
             if (Nodes.Count == 0)
             {
                 LogService.Log("NodeMap", "Navigate", "Node register is empty.", Severity.ERROR);
-                return false;
+                PathingManager.FinishedProcessing(new NavigationResult(null, false, request.Callback));
+                return;
             }
 
-            if (a.X % NodeDistance != 0 || a.Y % NodeDistance != 0)
+            if (request.Start.X % NodeDistance != 0 || request.Start.Y % NodeDistance != 0 || !Nodes.ContainsKey((request.Start.X, request.Start.Y)))
             {
-                LogService.Log("NodeMap", "Navigate", "Start node is not on grid.", Severity.WARNING);
+                LogService.Log("NodeMap", "Navigate", "Start node is invalid or outside NodeMap", Severity.ERROR);
+                PathingManager.FinishedProcessing(new NavigationResult(null, false, request.Callback));
+                return;
             }
 
-            if (b.X % NodeDistance != 0 || b.Y % NodeDistance != 0)
+            if (request.Target.X % NodeDistance != 0 || request.Target.Y % NodeDistance != 0 || !Nodes.ContainsKey((request.Target.X, request.Target.Y)))
             {
-                LogService.Log("NodeMap", "Navigate", "End node is not on grid.", Severity.WARNING);
+                LogService.Log("NodeMap", "Navigate", "End node is invalid or outside NodeMap", Severity.ERROR);
+                PathingManager.FinishedProcessing(new NavigationResult(null, false, request.Callback));
+                return;
             }
 
-            Node startNode = Node.FindNode(a, Nodes);
-            Node endNode = Node.FindNode(b, Nodes);
+            Node startNode = Nodes[(request.Start.X, request.Start.Y)];
+            Node endNode = Nodes[(request.Target.X, request.Target.Y)];
 
-            if (startNode == null || endNode == null)
+            if (startNode.Blocked)
             {
-                LogService.Log("NodeMap", "Navigate", "Start or end node is invalid or outside NodeMap", Severity.ERROR);
-                return false;
+                LogService.Log("NodeMap", "Navigate", "Start node is blocked", Severity.ERROR);
+                PathingManager.FinishedProcessing(new NavigationResult(null, false, request.Callback));
+                return;
+            }
+
+            if (endNode.Blocked)
+            {
+                LogService.Log("NodeMap", "Navigate", "End node is blocked", Severity.ERROR);
+                PathingManager.FinishedProcessing(new NavigationResult(null, false, request.Callback));
+                return;
             }
 
             Heap<Node> open = new Heap<Node>((int)MaxSize);
             Heap<Node> closed = new Heap<Node>((int)MaxSize);
 
             open.Add(startNode);
-
             while (open.Count > 0)
             {
                 Node current = open.RemoveFirst();
@@ -129,11 +153,12 @@ namespace ScrapBox.Framework.Pathfinding
 
                 if (current == endNode)
                 {
-                    path = RetraceSteps(startNode, endNode);
-                    return true;
+                    ScrapVector[] path = RetraceSteps(startNode, endNode);
+                    PathingManager.FinishedProcessing(new NavigationResult(path, true, request.Callback));
+                    return;
                 }
 
-                Node[] neighbors = current.Neighbors(Nodes, diagonalMovement);
+                Node[] neighbors = current.Neighbors(Nodes, NodeDistance, DiagonalMovement);
                 foreach (Node n in neighbors)
                 {
                     if (n == null || n.Blocked || closed.Contains(n))
@@ -158,7 +183,8 @@ namespace ScrapBox.Framework.Pathfinding
                 }
             }
 
-            return false;
+            PathingManager.FinishedProcessing(new NavigationResult(null, false, request.Callback));
+            return;
         }
     }
 }

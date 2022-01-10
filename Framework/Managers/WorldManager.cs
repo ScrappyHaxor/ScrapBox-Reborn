@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
+using System;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,8 +16,9 @@ namespace ScrapBox.Framework.Managers
 {
     public static class WorldManager
     {
-        public static Color BackColor;
         public static Scene CurrentScene;
+
+        public static DateTime Started;
 
         internal static Dictionary<string, Scene> Scenes;
         internal static List<ComponentSystem> Systems;
@@ -30,7 +32,7 @@ namespace ScrapBox.Framework.Managers
 
         static WorldManager()
         {
-            BackColor = Color.Black;
+            Started = DateTime.Now;
 
             Scenes = new Dictionary<string, Scene>();
             Systems = new List<ComponentSystem>();
@@ -58,7 +60,7 @@ namespace ScrapBox.Framework.Managers
             Scenes.Add(name, scene);
         }
 
-        public static void SwapScene(string name)
+        public static void SwapScene(string name, params object[] args)
         {
             Thread t = new Thread(delegate ()
             {
@@ -73,6 +75,9 @@ namespace ScrapBox.Framework.Managers
                     for (int i = 0; i < Entities.Count; i++)
                     {
                         Entity e = Entities[i];
+                        if (e == null)
+                            continue;
+
                         e.Sleep();
                     }
                     Entities.Clear();
@@ -95,7 +100,7 @@ namespace ScrapBox.Framework.Managers
 
                 CurrentScene.Initialize();
                 CurrentScene.LoadAssets();
-                CurrentScene.Load();
+                CurrentScene.Load(args);
 
                 swappingScene = false;
             });
@@ -134,12 +139,12 @@ namespace ScrapBox.Framework.Managers
             return false;
         }
 
-        public static ComponentSystem GetSystem<T>() where T : ComponentSystem
+        public static T GetSystem<T>() where T : ComponentSystem
         {
             foreach (ComponentSystem system in Systems)
             {
                 if (system.GetType().Equals(typeof(T)) || system.GetType().IsSubclassOf(typeof(T)))
-                    return system;
+                    return (T)system;
             }
 
             LogService.Log("WorldManager", "GetSystem", "Tried to get non-existant system.", Severity.WARNING);
@@ -167,12 +172,12 @@ namespace ScrapBox.Framework.Managers
             return false;
         }
 
-        public static Entity GetEntity<T>() where T : Entity
+        public static T GetEntity<T>() where T : Entity
         {
             foreach (Entity entity in Entities)
             {
                 if (entity.GetType().Equals(typeof(T)) || entity.GetType().IsSubclassOf(typeof(T)))
-                    return entity;
+                    return (T)entity;
             }
 
             LogService.Log("WorldManager", "GetEntity", "Tried to get non-existant entity.", Severity.WARNING);
@@ -186,33 +191,45 @@ namespace ScrapBox.Framework.Managers
 
             currentSceneBusy = true;
 
-            foreach (ComponentSystem system in Systems)
+            CurrentScene.Update(dt);
+
+            for (int i = 0; i < Systems.Count; i++)
             {
+                ComponentSystem system = Systems[i];
                 system.Update(dt);
             }
 
-            foreach (Entity entity in Entities)
+            for (int i = 0; i < Entities.Count; i++)
             {
+                Entity entity = Entities[i];
                 entity.Update(dt);
             }
 
-            CurrentScene.Update(dt);
+            
         }
 
-        internal static void Draw()
+        internal static void Draw(double dt)
         {
             if (CurrentScene == null || swappingScene)
                 return;
 
-            foreach (ComponentSystem system in Systems)
+            Renderer.BeginSceneRender();
+
+            CurrentScene.Draw();
+
+            for (int i = 0; i < Systems.Count; i++)
             {
+                ComponentSystem system = Systems[i];
                 system.Draw(CurrentScene.MainCamera);
             }
 
-            foreach (Entity entity in Entities)
+            for (int i = 0; i < Entities.Count; i++)
             {
+                Entity entity = Entities[i];
                 entity.Draw(CurrentScene.MainCamera);
             }
+
+            Renderer.EndSceneRender();
 
             if (Debug)
             {
@@ -220,8 +237,8 @@ namespace ScrapBox.Framework.Managers
                 PhysicsDiagnostics.Draw(new ScrapVector(5, 85));
             }
 
-            CurrentScene.Draw();
-
+            RenderDiagnostics.Calls = 0;
+            PhysicsDiagnostics.FPS = ScrapMath.Round(1 / dt);
             currentSceneBusy = false;
         }
     }

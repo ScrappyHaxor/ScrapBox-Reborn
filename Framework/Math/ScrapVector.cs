@@ -117,7 +117,10 @@ namespace ScrapBox.Framework.Math
 
 		public override int GetHashCode()
 		{
-			return X.GetHashCode() ^ Y.GetHashCode();
+			const uint hash = 0x9e3779b9;
+			uint seed = (uint)X + hash;
+			seed ^= (uint)Y + hash + (seed << 6) + (seed >> 2);
+			return (int)seed;
 		}
 
 		public override bool Equals(object obj)

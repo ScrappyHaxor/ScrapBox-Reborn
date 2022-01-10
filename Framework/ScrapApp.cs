@@ -14,18 +14,21 @@ namespace ScrapBox.Framework
 {
 	internal class InternalGame : Game
     {
-		public EventHandler Init;
-		public EventHandler Renew;
-		public EventHandler Render;
-		public double dt;
+		public Action Init;
+		public Action<double> Renew;
+		public Action<double> Render;
 
 		public GraphicsDeviceManager Graphics;
 
 		public InternalGame()
         {
-			Graphics = new GraphicsDeviceManager(this);
-			Graphics.PreferMultiSampling = true;
-			Content.RootDirectory = "Content";
+			Graphics = new GraphicsDeviceManager(this)
+			{
+				PreferMultiSampling = true,
+				SynchronizeWithVerticalRetrace = true
+            };
+
+            Content.RootDirectory = "Content";
 			IsMouseVisible = true;
 		}
 
@@ -35,9 +38,10 @@ namespace ScrapBox.Framework
 			Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
 			Graphics.ApplyChanges();
 
+			
+			Init();
 			base.Initialize();
-			Init?.Invoke(this, null);
-        }
+		}
 
         protected override void LoadContent()
         {
@@ -46,16 +50,16 @@ namespace ScrapBox.Framework
 
         protected override void Update(GameTime gameTime)
         {
-            base.Update(gameTime);
-			Renew?.Invoke(this, null);
-			dt = ScrapMath.Deltafy(gameTime);
-        }
+			Renew(ScrapMath.Deltafy(gameTime));
+			base.Update(gameTime);
+		}
 
         protected override void Draw(GameTime gameTime)
         {
-            base.Draw(gameTime);
-			Render?.Invoke(this, null);
-        }
+            
+			Render(ScrapMath.Deltafy(gameTime));
+			base.Draw(gameTime);
+		}
     }
 
 	public abstract class ScrapApp
@@ -84,24 +88,20 @@ namespace ScrapBox.Framework
 		}
 
 		//Sneaky way to hide default monogame methods
-		internal void Init(object o, EventArgs e)
+		internal void Init()
         {
 			Initialize();
         }
 
-		internal void Update(object o, EventArgs e)
+		internal void Update(double dt)
 		{
 			InputManager.Update();
-			
-
-			WorldManager.Update(internalGame.dt);
-			PhysicsDiagnostics.FPS = (int)(1 / internalGame.dt);
+			WorldManager.Update(dt);
 		}
 
-		internal void Draw(object o, EventArgs e)
+		internal void Draw(double dt)
 		{
-			Graphics.GraphicsDevice.Clear(WorldManager.BackColor);
-			WorldManager.Draw();
+			WorldManager.Draw(dt);
 		}
 
 		protected virtual void Exit(object o, EventArgs e)

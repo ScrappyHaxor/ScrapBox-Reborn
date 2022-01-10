@@ -27,6 +27,17 @@ namespace ScrapBox.Framework.Level
 
             RegisterComponent(Transform);
 		}
+
+		public bool InView(ScrapVector position, ScrapVector dimensions)
+        {
+			if (position.X + dimensions.X < VisibleArea.X || position.X - dimensions.X > VisibleArea.X + VisibleArea.Width ||
+				position.Y + dimensions.Y < VisibleArea.Y || position.Y - dimensions.Y > VisibleArea.Y + VisibleArea.Height)
+			{
+				return false;
+			}
+
+			return true;
+		}
 		
 		public void Update(Viewport viewport)
 		{

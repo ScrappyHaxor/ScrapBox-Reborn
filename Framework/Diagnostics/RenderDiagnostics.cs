@@ -23,7 +23,7 @@ namespace ScrapBox.Framework.Diagnostics
             Renderer.RenderText(Font, "Render Diagnostics", offset, Color.White);
             Renderer.RenderText(Font, $"Renderer calls: {Calls}", offset + new ScrapVector(0, TextOffset.Y), Color.White);
             Renderer.RenderText(Font, $"Total sprites: {SpriteSystem.Sprites}", offset + new ScrapVector(0, TextOffset.Y * 2), Color.White);
-            Renderer.RenderText(Font, $"Sprite system update: {SpriteSystem.TimeTaken} ms", offset + new ScrapVector(0, TextOffset.Y * 3), Color.White);
+            Renderer.RenderText(Font, $"Sprite system time taken: {SpriteSystem.TimeTaken} ms", offset + new ScrapVector(0, TextOffset.Y * 3), Color.White);
         }
     }
 }

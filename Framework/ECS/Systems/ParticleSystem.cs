@@ -2,6 +2,7 @@
 using System.Timers;
 using System.Collections.Generic;
 
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 using ScrapBox.Framework.Level;
@@ -22,7 +23,7 @@ namespace ScrapBox.Framework.ECS.Systems
 
         private readonly Timer lifeTimer;
 
-        public Particle(ScrapVector position, Texture2D sprite, int lifeSpan)
+        public Particle(ScrapVector position, ScrapVector size, Color tintColor, Texture2D sprite, int lifeSpan)
         {
             lifeTimer = new Timer(lifeSpan);
             lifeTimer.Elapsed += MarkAsDead;
@@ -30,14 +31,15 @@ namespace ScrapBox.Framework.ECS.Systems
             Transform = new Transform
             {
                 Position = position,
-                Dimensions = new ScrapVector(sprite.Width, sprite.Height)
+                Dimensions = size
             };
 
             RegisterComponent(Transform);
 
             Sprite = new Sprite2D
             {
-                Texture = sprite
+                Texture = sprite,
+                TintColor = tintColor
             };
 
             RegisterComponent(Sprite);

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using ScrapBox.Framework.Math;
+
 namespace ScrapBox.Framework.Generic
 {
     public static class Standard
@@ -12,5 +14,21 @@ namespace ScrapBox.Framework.Generic
 			a = b;
 			b = tmp;
 		}
+
+		public static T[,] Resize2DArray<T>(T[,] original, int rows, int columns)
+        {
+			T[,] newArray = new T[rows, columns];
+			int minRows = (int)ScrapMath.Min(rows, original.GetLength(0));
+			int minColumns = (int)ScrapMath.Min(columns, original.GetLength(1));
+			for (int i = 0; i < minRows; i++)
+            {
+				for (int j = 0; j < minColumns; j++)
+                {
+					newArray[i, j] = original[i, j];
+                }
+            }
+
+			return newArray;
+        }
 	}
 }
