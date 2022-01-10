@@ -43,7 +43,7 @@ namespace ScrapBox.Framework.Pathfinding
             maxY = double.MinValue;
         }
 
-        public void RegisterNode(ScrapVector position, bool solid)
+        public void RegisterNode(ScrapVector position, bool solid, int weight = 0)
         {
             if (NodeDistance == 0)
             {
@@ -57,7 +57,7 @@ namespace ScrapBox.Framework.Pathfinding
                 return;
             }
 
-            Node newNode = new Node(position, solid);
+            Node newNode = new Node(position, solid, weight);
             Nodes.Add((position.X, position.Y), newNode);
 
             if (newNode.Position.X < minX)
@@ -78,6 +78,14 @@ namespace ScrapBox.Framework.Pathfinding
             if (newNode.Position.Y > maxY)
             {
                 maxY = newNode.Position.Y + NodeDistance * 4;
+            }
+        }
+
+        public void UpdateWeight(ScrapVector position, int newWeight)
+        {
+            if (Nodes.ContainsKey((position.X, position.Y)))
+            {
+                Nodes[(position.X, position.Y)].Weight = newWeight;
             }
         }
 
@@ -164,7 +172,7 @@ namespace ScrapBox.Framework.Pathfinding
                     if (n == null || n.Blocked || closed.Contains(n))
                         continue;
 
-                    int newNeighborCost = current.GCost + (int)ScrapMath.Distance(current, n);
+                    int newNeighborCost = current.GCost + (int)ScrapMath.Distance(current, n) + n.Weight;
                     if (newNeighborCost < n.GCost || !open.Contains(n))
                     {
                         n.GCost = newNeighborCost;

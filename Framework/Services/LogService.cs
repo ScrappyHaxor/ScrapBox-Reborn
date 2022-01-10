@@ -21,6 +21,7 @@ namespace ScrapBox.Framework.Services
             logBuffer = new List<string>();
         }
 
+//#if DEBUG
         public static void Out(object obj)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;
@@ -28,6 +29,9 @@ namespace ScrapBox.Framework.Services
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write($"{obj}\n\n");
         }
+//#else
+//        public static void Out(object _) { }
+//#endif
 
         public static void Log(string assemblyName, string objectName, string source, string message, Severity severity)
         {
