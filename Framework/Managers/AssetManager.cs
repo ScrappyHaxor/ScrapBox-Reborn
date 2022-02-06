@@ -1,10 +1,12 @@
 using System.IO;
 using System.Collections.Generic;
 
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 
 using ScrapBox.Framework.Services;
+using ScrapBox.Framework.Math;
 
 namespace ScrapBox.Framework.Managers
 {
@@ -61,6 +63,20 @@ namespace ScrapBox.Framework.Managers
                 string[] args = line.Split(":");
                 ParseArgs(args, content);
             }
+        }
+
+        public static void AddSimpleTexture(string name, int width, int height, GraphicsDevice device, ContentManager content)
+        {
+            Texture2D newTex = new Texture2D(device, width, height);
+
+            Color[] data = new Color[width * height];
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i] = Color.White;
+            }
+
+            newTex.SetData(data);
+            textureRegister.Add(name, newTex);
         }
 
         public static void LoadResourceFile(string name, ContentManager content)
