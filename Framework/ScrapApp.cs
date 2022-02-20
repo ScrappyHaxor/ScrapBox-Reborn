@@ -64,6 +64,8 @@ namespace ScrapBox.Framework
 
 	public abstract class ScrapApp
 	{
+		public const string Version = "ScrapBox v.1.8.0";
+
 		public GraphicsDeviceManager Graphics { get { return internalGame.Graphics; } }
 		public SpriteBatch Batch { get; set; }
 		public ContentManager Content { get { return internalGame.Content; } }
