@@ -13,7 +13,7 @@ namespace ScrapBox.Framework.ECS.Systems
         public const float MAX_ITERATIONS = 20;
         public const float MAX_IMPULSE_ITERATIONS = 1;
 
-        public static ScrapVector Gravity = new ScrapVector(0, 9.14) * 100;
+        public static ScrapVector Gravity = new ScrapVector(0, 9.14);
 
         public static int Static;
         public static int Dynamic;

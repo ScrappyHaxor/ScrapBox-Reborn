@@ -89,6 +89,11 @@ namespace ScrapBox.Framework.Math
 			return System.Math.Sqrt(d);
         }
 
+		public static ScrapVector Sqrt(ScrapVector v)
+        {
+			return new ScrapVector(System.Math.Sqrt(v.X), System.Math.Sqrt(v.Y));
+        }
+
 		public static double Sin(double theta)
         {
 			return System.Math.Sin(theta);

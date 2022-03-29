@@ -49,47 +49,31 @@ namespace ScrapBox.Framework.ECS.Components
 			Force += force;
 		}
 
+		public bool Grounded()
+        {
+			return (State == RigidState.REST_STATIC || State == RigidState.REST_DYNAMIC) ? true : false;
+        }
+
 		internal void ApplyForces(double dt, double iterations)
 		{
 			if (!IsAwake)
 				return;
 
-			ScrapVector acceleration = ScrapVector.Zero;
+			ScrapVector acceleration = PhysicsSystem.Gravity;
 			acceleration += Force / Mass;
+			Force = ScrapVector.Zero;
 
 			if (State != RigidState.REST_STATIC && State != RigidState.REST_DYNAMIC)
 			{
-				acceleration += PhysicsSystem.Gravity / Mass;
-			}
-			
-			LinearVelocity += acceleration * dt / iterations;
-			
-			if (State != RigidState.REST_STATIC && State != RigidState.REST_DYNAMIC)
-			{
-				if (PhysicsSystem.Gravity == ScrapVector.Zero)
-				{
-					LinearVelocity *= new ScrapVector(Drag, Drag);
-				}
-				else
-				{
-					LinearVelocity *= new ScrapVector(Drag, 1);
-				}
+				acceleration += LinearVelocity * -Drag;
 			}
 			else
 			{
-				if (PhysicsSystem.Gravity == ScrapVector.Zero)
-				{
-					LinearVelocity *= new ScrapVector(Friction, Friction);
-				}
-				else
-				{
-					LinearVelocity *= new ScrapVector(Friction, 1);
-				}
+				acceleration += LinearVelocity * -Friction;
 			}
-						
-			Transform.Position += LinearVelocity * dt / iterations;
 
-			Force = ScrapVector.Zero;
+			LinearVelocity += acceleration * dt;
+			Transform.Position += LinearVelocity;
 		}
 
 		public override void Awake()

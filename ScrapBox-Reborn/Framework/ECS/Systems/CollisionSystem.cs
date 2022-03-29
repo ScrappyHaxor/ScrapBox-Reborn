@@ -129,7 +129,6 @@ namespace ScrapBox.Framework.ECS.Systems
                 if (!colliderA.IsAwake)
                     continue;
 
-                RigidBody2D.RigidState state = colliders[i].Rigidbody.State;
                 for (int j = i; j < colliders.Count; j++)
                 {
                     if (i == j) continue;
@@ -138,6 +137,45 @@ namespace ScrapBox.Framework.ECS.Systems
 
                     if (!colliderB.IsAwake)
                         continue;
+
+                    if (!colliderA.Rigidbody.IsStatic)
+                    {
+                        //Calculate state
+                        Transform transformA = colliderA.Transform;
+                        double bottom = transformA.Position.Y + transformA.Dimensions.Y / 2 + 1;
+
+                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X - transformA.Dimensions.X / 2, bottom)));
+                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X + transformA.Dimensions.X / 2, bottom)));
+                        bool midRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X, bottom)));
+
+                        if (leftRay || midRay || rightRay)
+                        {
+                            colliderA.Rigidbody.State = (colliderB.Rigidbody.IsStatic) ? RigidBody2D.RigidState.REST_STATIC : RigidBody2D.RigidState.REST_DYNAMIC;
+                        }
+                        else
+                        {
+                            colliderA.Rigidbody.State = RigidBody2D.RigidState.FALLING;
+                        }
+                    }
+
+                    if (!colliderB.Rigidbody.IsStatic)
+                    {
+                        Transform transformB = colliderB.Transform;
+                        double bottom = transformB.Position.Y + transformB.Dimensions.Y / 2 + 1;
+
+                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2, bottom)));
+                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X + transformB.Dimensions.X / 2, bottom)));
+                        bool midRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X, bottom)));
+
+                        if (leftRay || midRay || rightRay)
+                        {
+                            colliderB.Rigidbody.State = (colliderA.Rigidbody.IsStatic) ? RigidBody2D.RigidState.REST_STATIC : RigidBody2D.RigidState.REST_DYNAMIC;
+                        }
+                        else
+                        {
+                            colliderB.Rigidbody.State = RigidBody2D.RigidState.FALLING;
+                        }
+                    }
 
                     if (Collision.ApplyAppropriateAlgorith(colliderA, colliderB, out CollisionManifold manifold))
                     {
@@ -158,8 +196,6 @@ namespace ScrapBox.Framework.ECS.Systems
                         reports.Add(new IncidentReport(colliderA.Rigidbody, colliderB.Rigidbody, manifold));
                     }
                 }
-
-                colliderA.Rigidbody.State = state;
             }
 
             foreach (IncidentReport report in reports)
