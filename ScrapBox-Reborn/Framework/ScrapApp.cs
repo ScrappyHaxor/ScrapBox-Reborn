@@ -71,6 +71,10 @@ namespace ScrapBox.Framework
 		public ContentManager Content { get { return internalGame.Content; } }
 		public GameWindow Window { get { return internalGame.Window; } }
 
+		public string[] LaunchArguments { get { return launchArgs; } }
+
+		private string[] launchArgs;
+
 		private readonly InternalGame internalGame;
 
 		protected ScrapApp()
@@ -84,8 +88,9 @@ namespace ScrapBox.Framework
 			AppDomain.CurrentDomain.ProcessExit += new EventHandler(Exit);
 		}
 
-		public void Run()
+		public void Run(string[] args)
         {
+			launchArgs = args;
 			internalGame.Run();
 		}
 
