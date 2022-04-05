@@ -21,9 +21,21 @@ namespace ScrapBox.Framework.ECS.Systems
         }
     }
 
+    public class RayResult
+    {
+        public readonly bool hit;
+        public readonly Entity other;
+
+        public RayResult(bool hit, Entity other)
+        {
+            this.hit = hit;
+            this.other = other;
+        }
+    }
+
     public abstract class Ray
     {
-        public abstract bool Shoot(Collider other);
+        public abstract RayResult Shoot(Collider other);
     }
 
     public class PointRay : Ray
@@ -35,19 +47,19 @@ namespace ScrapBox.Framework.ECS.Systems
             point = p;
         }
 
-        public override bool Shoot(Collider other)
+        public override RayResult Shoot(Collider other)
         {
             if (other.Algorithm == Collider.CollisionAlgorithm.SAT ||
                 other.Algorithm == Collider.CollisionAlgorithm.SAT_PIXEL)
             {
-                return Collision.IntersectPointPolygon(point, other.GetVerticies());
+                return new RayResult(Collision.IntersectPointPolygon(point, other.GetVerticies()), other.Owner);
             }
             else if (other.Algorithm == Collider.CollisionAlgorithm.SAT_CIRCLE)
             {
-                return Collision.IntersectPointCircle(point, other);
+                return new RayResult(Collision.IntersectPointCircle(point, other), other.Owner);
             }
 
-            return false;
+            return new RayResult(false, null);
         }
     }
 
@@ -61,15 +73,15 @@ namespace ScrapBox.Framework.ECS.Systems
             this.verts = verts;
         }
 
-        public override bool Shoot(Collider other)
+        public override RayResult Shoot(Collider other)
         {
             if (other.Algorithm == Collider.CollisionAlgorithm.SAT ||
                 other.Algorithm == Collider.CollisionAlgorithm.SAT_PIXEL)
             {
-                return Collision.IntersectPolygons(verts, other.GetVerticies(), out CollisionManifold _);
+                return new RayResult(Collision.IntersectPolygons(verts, other.GetVerticies(), out CollisionManifold _), other.Owner);
             }
 
-            return false;
+            return new RayResult(false, null);
         }
     }
 
@@ -105,17 +117,17 @@ namespace ScrapBox.Framework.ECS.Systems
         /// Raycasts collider
         /// </summary>
         /// <returns>True if collider intersects with an object</returns>
-        public bool Raycast(Ray ray)
+        public RayResult Raycast(Ray ray)
         {
-            bool result;
+            RayResult result = new RayResult(false, null);
             foreach (Collider c in colliders)
             {
                 result = ray.Shoot(c);
-                if (result)
-                    return true;
+                if (result.hit)
+                    return result;
             }
 
-            return false;
+            return result;
         }
 
         public override void Update(double dt)
@@ -144,11 +156,11 @@ namespace ScrapBox.Framework.ECS.Systems
                         Transform transformA = colliderA.Transform;
                         double bottom = transformA.Position.Y + transformA.Dimensions.Y / 2 + 1;
 
-                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X - transformA.Dimensions.X / 2, bottom)));
-                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X + transformA.Dimensions.X / 2, bottom)));
-                        bool midRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X, bottom)));
+                        RayResult leftRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X - transformA.Dimensions.X / 2, bottom)));
+                        RayResult rightRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X + transformA.Dimensions.X / 2, bottom)));
+                        RayResult midRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X, bottom)));
 
-                        if (leftRay || midRay || rightRay)
+                        if (leftRay.hit || midRay.hit || rightRay.hit)
                         {
                             colliderA.Rigidbody.State = (colliderB.Rigidbody.IsStatic) ? RigidBody2D.RigidState.REST_STATIC : RigidBody2D.RigidState.REST_DYNAMIC;
                         }
@@ -163,11 +175,11 @@ namespace ScrapBox.Framework.ECS.Systems
                         Transform transformB = colliderB.Transform;
                         double bottom = transformB.Position.Y + transformB.Dimensions.Y / 2 + 1;
 
-                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2, bottom)));
-                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X + transformB.Dimensions.X / 2, bottom)));
-                        bool midRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X, bottom)));
+                        RayResult leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2 + 2, bottom)));
+                        RayResult rightRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X + transformB.Dimensions.X / 2 - 2, bottom)));
+                        RayResult midRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X, bottom)));
 
-                        if (leftRay || midRay || rightRay)
+                        if (leftRay.hit || midRay.hit || rightRay.hit)
                         {
                             colliderB.Rigidbody.State = (colliderA.Rigidbody.IsStatic) ? RigidBody2D.RigidState.REST_STATIC : RigidBody2D.RigidState.REST_DYNAMIC;
                         }
