@@ -53,7 +53,15 @@ namespace ScrapBox.Framework.ECS.Systems
                 if (!sprite.IsAwake)
                     continue;
 
-                Renderer.RenderSprite(sprite, mainCamera);
+                if (sprite.Mode == SpriteMode.SCALE)
+                {
+                    Renderer.RenderSprite(sprite, mainCamera);
+                }
+                else if (sprite.Mode == SpriteMode.TILE)
+                {
+                    Renderer.RenderTileable(sprite, mainCamera);
+                }
+                
             }
 
             TimeTaken = watch.ElapsedMilliseconds / 1000;

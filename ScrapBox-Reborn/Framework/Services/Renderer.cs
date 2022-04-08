@@ -175,6 +175,71 @@ namespace ScrapBox.Framework.Services
         }
         #endregion
 
+        #region RenderTileable
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, Camera camera = null, Effect shader = null)
+        {
+            RenderTileable(texture, position, dimensions, camera, shader);
+        }
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, float rotation, 
+            Camera camera = null, Effect shader = null)
+        {
+            RenderTileable(texture, position, dimensions, rotation, Color.White, camera, shader);
+        }
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, float rotation, Color tintColor, 
+            Camera camera = null, Effect shader = null)
+        {
+            RenderTileable(texture, position, dimensions, rotation, tintColor, SpriteEffects.None, camera, shader);
+        }
+
+
+        public static void RenderTileable(Sprite2D sprite, Camera camera = null)
+        {
+            RenderTileable(sprite.Texture, sprite.Position, sprite.Transform.Dimensions, (float)sprite.Rotation,
+                sprite.TintColor, sprite.Effects, camera, sprite.Shader);
+        }
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, float rotation, Color tintColor,
+                SpriteEffects effects, Camera camera, Effect shader = null, float depth = 0)
+        {
+            if (texture == null)
+            {
+                LogService.Log("Renderer2D", "RenderTileable", "Tried to render null texture.", Severity.WARNING);
+                return;
+            }
+
+            //Culling
+            if (camera != null)
+            {
+                if (!camera.InView(position, dimensions))
+                    return;
+            }
+
+            RenderDiagnostics.Calls++;
+
+            //TODO: Fix this mess
+            BeginRender(null, camera, shader, SamplerState.LinearClamp);
+            for (int x = (int)(position.X - dimensions.X / 2); x < (int)(position.X + dimensions.X / 2); x += texture.Width)
+            {
+                for (int y = (int)(position.Y - dimensions.Y / 2); y < (int)(position.Y + dimensions.Y / 2); y += texture.Height)
+                {
+                    Rectangle sourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+                    if (x + texture.Width > position.X + dimensions.X / 2)
+                        sourceRectangle.Width = texture.Width - (int)(x + texture.Width - (position.X + dimensions.X / 2));
+
+                    if (y + texture.Height > position.Y + dimensions.Y / 2)
+                        sourceRectangle.Height = texture.Height - (int)(y + texture.Height - (position.Y + dimensions.Y / 2));
+
+                    batch.Draw(texture, new Rectangle(x, y, sourceRectangle.Width, sourceRectangle.Height), sourceRectangle, tintColor, rotation, ScrapVector.Zero, effects, depth);
+                }
+            }
+            EndRender();
+        }
+
+        #endregion
+
         #region Primitives
         public static void RenderLine(ScrapVector pointA, ScrapVector pointB, Color color, Camera camera = null, Effect shader = null, double thickness = 1)
         {
