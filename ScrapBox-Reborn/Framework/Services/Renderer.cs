@@ -261,7 +261,7 @@ namespace ScrapBox.Framework.Services
             EndRender();
         }
 
-        public static void RenderPolygonOutline(ScrapVector[] verts, Color color, Camera camera = null, Effect shader = null)
+        public static void RenderPolygonOutline(ScrapVector[] verts, Color color, Camera camera = null, Effect shader = null, double lineThickness = 1)
         {
             if (verts.Length == 0)
                 return;
@@ -277,7 +277,7 @@ namespace ScrapBox.Framework.Services
                 ScrapVector start = verts[i];
                 ScrapVector end = verts[(i + 1) % verts.Length];
 
-                RenderLine(start, end, color, camera, shader);
+                RenderLine(start, end, color, camera, shader, lineThickness);
             }
         }
 
@@ -317,19 +317,15 @@ namespace ScrapBox.Framework.Services
             EndRender();
         }
 
-        public static void RenderOutlineBox(ScrapVector position, ScrapVector dimensions, float rotation, Color color, Camera camera = null, Effect shader = null)
+        public static void RenderOutlineBox(ScrapVector position, ScrapVector dimensions, float rotation, Color color, Camera camera = null, Effect shader = null, double lineThickness = 1)
         {
             ScrapVector center = new ScrapVector(dimensions.X / 2 - (dimensions.X - pixel.Width) / 2, dimensions.Y / 2 - (dimensions.Y - pixel.Height) / 2);
             Rectangle bounds = new Rectangle((int)position.X, (int)position.Y, (int)dimensions.X, (int)dimensions.Y);
 
-            RenderDiagnostics.Calls++;
-
-            BeginRender(color, camera, shader, SamplerState.PointClamp);
-            batch.Draw(pixel, new Rectangle(bounds.X, bounds.Y - bounds.Height / 2, bounds.Width, 1), null, color, rotation, center, SpriteEffects.None, 0);
-            batch.Draw(pixel, new Rectangle(bounds.X, bounds.Y + bounds.Height / 2, bounds.Width, 1), null, color, rotation, center, SpriteEffects.None, 0);
-            batch.Draw(pixel, new Rectangle(bounds.X - bounds.Width / 2, bounds.Y, 1, bounds.Height), null, color, rotation, center, SpriteEffects.None, 0);
-            batch.Draw(pixel, new Rectangle(bounds.X + bounds.Width / 2, bounds.Y, 1, bounds.Height), null, color, rotation, center, SpriteEffects.None, 0);
-            EndRender();
+            RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y - bounds.Height / 2), new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
+            RenderLine(new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y - bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
+            RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y - bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y - bounds.Height / 2), color, camera, shader, lineThickness);
+            RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y + bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
         }
 
         public static void RenderCircle(ScrapVector position, double radius, int pointCount, Color color, Camera camera = null, Effect shader = null, int thickness = 1)
@@ -379,6 +375,12 @@ namespace ScrapBox.Framework.Services
 
         public static void RenderText(SpriteFont font, string label, ScrapVector position, Color textColor, Camera camera = null, Effect shader = null)
         {
+            if (font == null)
+            {
+                LogService.Log("Renderer2D", "RenderText", "Font provided was null.", Severity.ERROR);
+                return;
+            }
+
             RenderDiagnostics.Calls++;
 
             BeginRender(textColor, camera, shader);            

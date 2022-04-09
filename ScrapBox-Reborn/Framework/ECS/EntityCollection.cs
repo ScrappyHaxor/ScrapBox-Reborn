@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using ScrapBox.Framework.Level;
+using ScrapBox.Framework.Managers;
 
 namespace ScrapBox.Framework.ECS
 {
@@ -15,6 +16,8 @@ namespace ScrapBox.Framework.ECS
 
         public virtual void Awake()
         {
+            WorldManager.RegisterEntityCollection(this);
+
             foreach (Entity e in Register)
             {
                 e.Awake();
@@ -23,6 +26,8 @@ namespace ScrapBox.Framework.ECS
 
         public virtual void Sleep()
         {
+            WorldManager.PurgeEntityCollection(this);
+
             foreach (Entity e in Register)
             {
                 e.Sleep();
@@ -31,18 +36,12 @@ namespace ScrapBox.Framework.ECS
 
         public virtual void Update(double dt)
         {
-            foreach (Entity e in Register)
-            {
-                e.Update(dt);
-            }
+
         }
 
         public virtual void Draw(Camera mainCamera)
         {
-            foreach (Entity e in Register)
-            {
-                e.Draw(mainCamera);
-            }
+
         }
     }
 }

@@ -21,10 +21,16 @@ namespace ScrapBox.Framework.ECS.Components
         public Color BorderColor;
         public Color HoverColor;
         public ScrapShape Shape;
+        public double OutlineThickness;
 
         public EventHandler Pressed;
 
         public bool Hovered;
+
+        public Button()
+        {
+            OutlineThickness = 1;
+        }
 
         public override void Awake()
         {
@@ -78,11 +84,11 @@ namespace ScrapBox.Framework.ECS.Components
         {
             if (Hovered)
             {
-                Renderer.RenderPolygonOutline(Shape.GetVerticies(), HoverColor, mainCamera);
+                Renderer.RenderPolygonOutline(Shape.GetVerticies(), HoverColor, mainCamera, null, OutlineThickness);
             }
             else
             {
-                Renderer.RenderPolygonOutline(Shape.GetVerticies(), BorderColor, mainCamera);
+                Renderer.RenderPolygonOutline(Shape.GetVerticies(), BorderColor, mainCamera, null, OutlineThickness);
             }
 
             base.Render(mainCamera);

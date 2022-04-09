@@ -48,7 +48,7 @@ namespace ScrapBox.Framework.ECS.Systems
         public override void Draw(Camera mainCamera)
         {
             watch.Restart();
-            foreach (Sprite2D sprite in sprites)
+            foreach (Sprite2D sprite in sprites)    
             {
                 if (!sprite.IsAwake)
                     continue;

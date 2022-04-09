@@ -23,6 +23,7 @@ namespace ScrapBox.Framework.Managers
         internal static Dictionary<string, Scene> Scenes;
         internal static List<ComponentSystem> Systems;
         internal static List<Entity> Entities;
+        internal static List<EntityCollection> EntityCollections;
 
         internal static bool Debug;
         internal static SpriteFont DebugFont;
@@ -53,6 +54,7 @@ namespace ScrapBox.Framework.Managers
             RegisterSystem(interfaceSystem);
 
             Entities = new List<Entity>();
+            EntityCollections = new List<EntityCollection>();
         }
 
         public static void RegisterScene(string name, Scene scene)
@@ -161,6 +163,16 @@ namespace ScrapBox.Framework.Managers
             Entities.Remove(entity);
         }
 
+        public static void RegisterEntityCollection<T>(T entityCollection) where T : EntityCollection
+        {
+            EntityCollections.Add(entityCollection);
+        }
+
+        public static void PurgeEntityCollection<T>(T entityCollection) where T : EntityCollection
+        {
+            EntityCollections.Remove(entityCollection);
+        }
+
         public static bool HasEntity<T>() where T : Entity
         {
             foreach (Entity entity in Entities)
@@ -184,6 +196,29 @@ namespace ScrapBox.Framework.Managers
             return default;
         }
 
+        public static bool HasEntityCollection<T>() where T : EntityCollection
+        {
+            foreach (EntityCollection collection in EntityCollections)
+            {
+                if (collection.GetType().Equals(typeof(T)) || collection.GetType().IsSubclassOf(typeof(T)))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static T GetEntityCollection<T>() where T : EntityCollection
+        {
+            foreach (EntityCollection collection in EntityCollections)
+            {
+                if (collection.GetType().Equals(typeof(T)) || collection.GetType().IsSubclassOf(typeof(T)))
+                    return (T)collection;
+            }
+
+            LogService.Log("WorldManager", "GetEntityCollection", "Tried to get non-existant entity collection.", Severity.WARNING);
+            return default;
+        }
+
         internal static void Update(double dt)
         {
             if (CurrentScene == null || swappingScene)
@@ -192,6 +227,12 @@ namespace ScrapBox.Framework.Managers
             currentSceneBusy = true;
 
             CurrentScene.Update(dt);
+
+            for (int i = 0; i < EntityCollections.Count; i++)
+            {
+                EntityCollection collection = EntityCollections[i];
+                collection.Update(dt);
+            }
 
             for (int i = 0; i < Systems.Count; i++)
             {
@@ -204,8 +245,6 @@ namespace ScrapBox.Framework.Managers
                 Entity entity = Entities[i];
                 entity.Update(dt);
             }
-
-            
         }
 
         internal static void Draw(double dt)
@@ -216,6 +255,12 @@ namespace ScrapBox.Framework.Managers
             Renderer.BeginSceneRender();
 
             CurrentScene.Draw();
+
+            for (int i = 0; i < EntityCollections.Count; i++)
+            {
+                EntityCollection collection = EntityCollections[i];
+                collection.Draw(CurrentScene.MainCamera);
+            }
 
             for (int i = 0; i < Systems.Count; i++)
             {
