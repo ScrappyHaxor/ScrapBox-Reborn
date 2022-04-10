@@ -108,6 +108,24 @@ namespace ScrapBox.Framework.Managers
              LogService.Log("AssetManager", "LoadResourceFile", $"Finished loading resource file {name}. {entryNumber} assets loaded successfully.", Severity.INFO);
         }
 
+        public static void LoadTexture(string name, ContentManager content)
+        {
+            Texture2D texture = content.Load<Texture2D>(name);
+            textureRegister.Add(name, texture);
+        }
+
+        public static void LoadFont(string name, ContentManager content)
+        {
+            SpriteFont font = content.Load<SpriteFont>(name);
+            fontRegister.Add(name, font);
+        }
+
+        public static void LoadShader(string name, ContentManager content)
+        {
+            Effect shader = content.Load<Effect>(name);
+            shaderRegister.Add(name, shader);
+        }
+
         public static void Unload(ContentManager content)
         {
             textureRegister.Clear();
