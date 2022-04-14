@@ -16,6 +16,9 @@ namespace ScrapBox.Framework.ECS.Components
 			if (IsAwake)
 				return;
 
+			if (Layer == null)
+				Layer = Owner.Layer;
+
 			IsAwake = true;
 		}
 

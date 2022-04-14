@@ -124,7 +124,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             if (!ReadOnly)
             {
-                if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(WorldManager.CurrentScene.MainCamera), Shape.Verts))
+                if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verts))
                 {
                     focused = true;
                 }

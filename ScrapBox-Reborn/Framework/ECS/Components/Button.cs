@@ -64,7 +64,7 @@ namespace ScrapBox.Framework.ECS.Components
         {
             Shape.Center = Transform.Position;
             Shape.Dimensions = Transform.Dimensions;
-            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(WorldManager.CurrentScene.MainCamera), Shape.Verts))
+            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verts))
             {
                 Hovered = true;
                 if (InputManager.IsButtonDown(Input.Button.LEFT_MOUSE_BUTTON))

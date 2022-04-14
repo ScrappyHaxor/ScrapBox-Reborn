@@ -22,7 +22,8 @@ namespace ScrapBox.Framework.Services
         internal static Texture2D pixel;
         internal static Color pixelColor;
         internal static BasicEffect defaultShader;
-        internal static RenderTarget2D renderTarget;
+
+        internal static RenderTarget2D sceneTarget;
 
         public const int MAX_CIRCLE_POINTS = 256;
         public const int MIN_CIRCLE_POINTS = 8;
@@ -45,7 +46,7 @@ namespace ScrapBox.Framework.Services
                 TextureEnabled = true
             };
 
-            renderTarget = new RenderTarget2D(Batch.GraphicsDevice,
+            sceneTarget = new RenderTarget2D(Batch.GraphicsDevice,
                 batch.GraphicsDevice.PresentationParameters.BackBufferWidth, batch.GraphicsDevice.PresentationParameters.BackBufferHeight,
                 false,
                 batch.GraphicsDevice.PresentationParameters.BackBufferFormat,
@@ -56,14 +57,22 @@ namespace ScrapBox.Framework.Services
 
         internal static void BeginSceneRender()
         {
-            Batch.GraphicsDevice.SetRenderTarget(renderTarget);
+            Batch.GraphicsDevice.SetRenderTarget(sceneTarget);
             Batch.GraphicsDevice.Clear(ClearColor);
             Batch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
         }
 
-        public static void BeginRenderToTexture(RenderTarget2D renderTarget)
+        public static void BeginRenderToTarget(RenderTarget2D renderTarget)
         {
             Batch.GraphicsDevice.SetRenderTarget(renderTarget);
+            Batch.GraphicsDevice.Clear(Color.Transparent);
+        }
+
+        public static void RenderTargetToScene(RenderTarget2D renderTarget)
+        {
+            batch.Begin(SpriteSortMode.Immediate);
+            batch.Draw(renderTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
+            batch.End();
         }
 
         internal static void BeginRender(Color? color = null, Camera camera = null, Effect shader = null, SamplerState sampler = null)
@@ -101,9 +110,9 @@ namespace ScrapBox.Framework.Services
             Batch.End();
         }
 
-        public static void EndRenderToTexture()
+        public static void EndRenderToTarget()
         {
-            Batch.GraphicsDevice.SetRenderTarget(null);
+            Batch.GraphicsDevice.SetRenderTarget(sceneTarget);
         }
 
         internal static void EndSceneRender()
@@ -112,7 +121,7 @@ namespace ScrapBox.Framework.Services
 
             Batch.GraphicsDevice.Clear(ClearColor);
             batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, effect: PostProcessing);
-            batch.Draw(renderTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
+            batch.Draw(sceneTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
             batch.End();
         }
 

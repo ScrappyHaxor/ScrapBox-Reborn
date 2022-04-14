@@ -130,7 +130,7 @@ namespace ScrapBox.Framework.ECS.Systems
             return result;
         }
 
-        public override void Update(double dt)
+        public override void Tick(double dt)
         {
             reports.Clear();
 
@@ -220,7 +220,7 @@ namespace ScrapBox.Framework.ECS.Systems
             }
         }
 
-        public override void Draw(Camera mainCamera)
+        public override void Render(Camera mainCamera)
         {
 
         }

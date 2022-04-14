@@ -174,7 +174,10 @@ namespace ScrapBox.Framework.ECS.Components
 				return;
             }
 
-			ReadSheet();	
+			ReadSheet();
+
+			if (Layer == null)
+				Layer = Owner.Layer;
 			IsAwake = true;
 		}
 
