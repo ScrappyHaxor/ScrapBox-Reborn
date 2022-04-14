@@ -40,12 +40,12 @@ namespace ScrapBox.Framework.ECS.Systems
             sprites.Clear();
         }
 
-        public override void Update(double dt)
+        public override void Tick(double dt)
         {
             
         }
 
-        public override void Draw(Camera mainCamera)
+        public override void Render(Camera mainCamera)
         {
             watch.Restart();
             foreach (Sprite2D sprite in sprites)    

@@ -54,7 +54,11 @@ namespace ScrapBox.Framework.ECS.Components
 			if (SourceRectangle == default)
 				SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
 
-			WorldManager.GetSystem<SpriteSystem>().RegisterSprite(this);
+
+			if (Layer == null)
+				Layer = Owner.Layer;
+
+			Layer.GetSystem<SpriteSystem>().RegisterSprite(this);
 			IsAwake = true;
 		}
 
@@ -63,7 +67,7 @@ namespace ScrapBox.Framework.ECS.Components
 			if (!IsAwake)
 				return;
 
-			WorldManager.GetSystem<SpriteSystem>().PurgeSprite(this);
+			Layer.GetSystem<SpriteSystem>().PurgeSprite(this);
 			IsAwake = false;
         }
 	}

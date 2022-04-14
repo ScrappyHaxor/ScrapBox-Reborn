@@ -105,12 +105,12 @@ namespace ScrapBox.Framework
 		internal void Update(double dt)
 		{
 			InputManager.Update();
-			WorldManager.Update(dt);
+			SceneManager.Update(dt);
 		}
 
 		internal void Draw(double dt)
 		{
-			WorldManager.Draw(dt);
+			SceneManager.Draw(dt);
 		}
 
 		protected virtual void Exit(object o, EventArgs e)

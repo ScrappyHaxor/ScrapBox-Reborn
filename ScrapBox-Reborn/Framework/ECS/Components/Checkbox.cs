@@ -76,7 +76,7 @@ namespace ScrapBox.Framework.ECS.Components
             box.Center = Transform.Position;
             box.Dimensions = Transform.Dimensions;
 
-            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(WorldManager.CurrentScene.MainCamera), box.GetVerticies()))
+            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), box.GetVerticies()))
             {
                 if (InputManager.IsButtonDown(Input.Button.LEFT_MOUSE_BUTTON))
                 {

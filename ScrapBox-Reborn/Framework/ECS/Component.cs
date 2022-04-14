@@ -1,3 +1,4 @@
+using ScrapBox.Framework.Level;
 using ScrapBox.Framework.Services;
 
 namespace ScrapBox.Framework.ECS
@@ -8,6 +9,8 @@ namespace ScrapBox.Framework.ECS
 
 		public Entity Owner { get; set; }
 		public bool IsAwake { get; set; }
+
+		public Layer Layer { get; set; }
 
 		protected bool Dependency<T>(out T comp, bool optional = false) where T : Component
 		{

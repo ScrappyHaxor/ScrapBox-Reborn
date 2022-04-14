@@ -54,7 +54,7 @@ namespace ScrapBox.Framework.Services
             //It needs some serious reworking in the future, this shit is gonna be so hard to maintain
 
             //Culling
-            Camera camera = WorldManager.CurrentScene.MainCamera;
+            Camera camera = SceneManager.CurrentScene.MainCamera;
             if (camera != null)
             {
                 if (!camera.InView(a.Transform.Position, a.Transform.Dimensions))

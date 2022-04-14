@@ -9,14 +9,18 @@ namespace ScrapBox.Framework.ECS
     {
         public abstract List<Entity> Register { get; set; }
 
-        protected EntityCollection()
+        protected readonly Layer layer;
+
+        protected EntityCollection(Layer layer)
         {
+            this.layer = layer;
+
             Register = new List<Entity>();
         }
 
         public virtual void Awake()
         {
-            WorldManager.RegisterEntityCollection(this);
+            layer.RegisterEntityCollection(this);
 
             foreach (Entity e in Register)
             {
@@ -26,7 +30,7 @@ namespace ScrapBox.Framework.ECS
 
         public virtual void Sleep()
         {
-            WorldManager.PurgeEntityCollection(this);
+            layer.PurgeEntityCollection(this);
 
             foreach (Entity e in Register)
             {
@@ -34,12 +38,22 @@ namespace ScrapBox.Framework.ECS
             }
         }
 
-        public virtual void Update(double dt)
+        public virtual void PreLayerTick(double dt)
         {
 
         }
 
-        public virtual void Draw(Camera mainCamera)
+        public virtual void PostLayerTick(double dt)
+        {
+
+        }
+
+        public virtual void PreLayerRender(Camera mainCamera)
+        {
+
+        }
+
+        public virtual void PostLayerRender(Camera mainCamera)
         {
 
         }

@@ -14,9 +14,15 @@ namespace ScrapBox.Framework.ECS
 		public bool IsAwake { get; set; }
 
 		private readonly List<Component> register = new List<Component>();
+		public readonly Layer Layer;
 
 		//The entire entity component system is in need of optimization. Too many typeof and gettype
 	
+		protected Entity(Layer layer)
+        {
+			this.Layer = layer;
+        }
+
 		~Entity()
         {
 			foreach (Component component in register)
@@ -31,7 +37,7 @@ namespace ScrapBox.Framework.ECS
 		{
 			entity = default;
 
-			if (!WorldManager.HasEntity<T>())
+			if (!Layer.HasEntity<T>())
 			{
 				if (!optional)
 				{
@@ -41,7 +47,7 @@ namespace ScrapBox.Framework.ECS
 				return false;
 			}
 
-			entity = WorldManager.GetEntity<T>();
+			entity = Layer.GetEntity<T>();
 			if (!entity.IsAwake)
 			{
 				if (!optional)
@@ -111,7 +117,7 @@ namespace ScrapBox.Framework.ECS
 				component.Awake();
 			}
 
-			WorldManager.RegisterEntity(this);
+			Layer.RegisterEntity(this);
 			IsAwake = true;
 		}
 
@@ -125,16 +131,26 @@ namespace ScrapBox.Framework.ECS
 				component.Sleep();
             }
 
-			WorldManager.PurgeEntity(this);
+			Layer.PurgeEntity(this);
 			IsAwake = false;
         }
 
-		public virtual void Update(double dt) 
+		public virtual void PreLayerTick(double dt) 
 		{ 
 
 		}
 
-		public virtual void Draw(Camera mainCamera)
+		public virtual void PostLayerTick(double dt)
+        {
+
+        }
+
+		public virtual void PreLayerRender(Camera camera)
+        {
+
+        }
+
+		public virtual void PostLayerRender(Camera camera)
         {
 
         }

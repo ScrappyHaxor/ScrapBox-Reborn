@@ -7,10 +7,9 @@ using ScrapBox.Framework.ECS.Components;
 
 namespace ScrapBox.Framework.Level
 {
-	public class Camera : Entity
+	public class Camera
 	{
-        public override string Name => "ScrapBox Camera";
-        public Transform Transform { get; set; }
+		public ScrapVector Position { get; set; }
 		public Rectangle Bounds { get; internal set; }
 		public Rectangle VisibleArea { get; internal set; }
 		public Matrix TransformationMatrix { get; set; }
@@ -18,14 +17,9 @@ namespace ScrapBox.Framework.Level
 
 		public Camera(Viewport viewport)
 		{
+			Position = ScrapVector.Zero;
 			Bounds = viewport.Bounds;
 			Zoom = 1;
-			Transform = new Transform
-            {
-                Position = ScrapVector.Zero
-            };
-
-            RegisterComponent(Transform);
 		}
 
 		public bool InView(ScrapVector position, ScrapVector dimensions)
@@ -45,7 +39,7 @@ namespace ScrapBox.Framework.Level
 
 			//Update transformation matrix
 			TransformationMatrix = Matrix.CreateTranslation(
-					new Vector3(-(float)Transform.Position.X, -(float)Transform.Position.Y, 0)) *
+					new Vector3(-(float)Position.X, -(float)Position.Y, 0)) *
 					Matrix.CreateScale((float)Zoom) * 
 					Matrix.CreateTranslation(new Vector3(Bounds.Width * 0.5f, Bounds.Height * 0.5f, 0));
 
