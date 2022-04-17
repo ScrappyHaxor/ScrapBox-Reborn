@@ -14,6 +14,13 @@ using ScrapBox.Framework.Level;
 
 namespace ScrapBox.Framework.Managers
 {
+    public enum DefaultLayers
+    {
+        BACKGROUND = 0,
+        FOREGROUND = 1,
+        UI = 2
+    }
+
     public static class SceneManager
     {
         public static Scene CurrentScene;

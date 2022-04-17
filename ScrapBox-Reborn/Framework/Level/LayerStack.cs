@@ -1,16 +1,10 @@
-﻿using System;
+﻿using ScrapBox.Framework.Managers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ScrapBox.Framework.Level
 {
-    public enum DefaultLayers
-    {
-        BACKGROUND = 0,
-        FOREGROUND = 1,
-        UI = 2
-    }
-
     public class LayerStack
     {
         public List<Layer> Stack { get { return stack; } }
