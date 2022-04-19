@@ -64,7 +64,10 @@ namespace ScrapBox.Framework.ECS
 			if (!success)
 				return;
 
-			WorldManager.GetSystem<CollisionSystem>().RegisterCollider(this);
+			if (Layer == null)
+				Layer = Owner.Layer;
+
+			Layer.GetSystem<CollisionSystem>().RegisterCollider(this);
 			IsAwake = true;
         }
 
@@ -73,7 +76,7 @@ namespace ScrapBox.Framework.ECS
 			if (!IsAwake)
 				return;
 
-			WorldManager.GetSystem<CollisionSystem>().PurgeCollider(this);
+			Layer.GetSystem<CollisionSystem>().PurgeCollider(this);
 			IsAwake = false;
 		}
     }

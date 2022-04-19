@@ -32,7 +32,7 @@ namespace ScrapBox.Framework.ECS.Systems
             interfaces.Clear();
         }
 
-        public override void Update(double dt)
+        public override void Tick(double dt)
         {
             for (int i = 0; i < interfaces.Count; i++)
             {
@@ -44,7 +44,7 @@ namespace ScrapBox.Framework.ECS.Systems
             }
         }
 
-        public override void Draw(Camera mainCamera)
+        public override void Render(Camera mainCamera)
         {
             for (int i = 0; i < interfaces.Count; i++)
             {

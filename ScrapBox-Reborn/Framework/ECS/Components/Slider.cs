@@ -127,7 +127,7 @@ namespace ScrapBox.Framework.ECS.Components
 
         internal override void Tick()
         {
-            ScrapVector mouseWorld = InputManager.GetMouseWorldPosition(WorldManager.CurrentScene.MainCamera);
+            ScrapVector mouseWorld = InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera);
             if (Collision.IntersectPointPolygon(mouseWorld, handle.GetVerticies()))
             {
                 hovered = true;

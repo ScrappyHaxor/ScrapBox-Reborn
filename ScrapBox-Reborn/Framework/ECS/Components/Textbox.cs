@@ -26,14 +26,21 @@ namespace ScrapBox.Framework.ECS.Components
         public double HorizontalPadding;
         public bool ReadOnly;
         public bool Multiline;
+        public double OutlineThickness;
 
         public Color BorderColor;
         public Color FocusColor;
+        public Color PlaceholderColor;
 
         private bool focused;
         public string Input;
 
         private double lastErase;
+
+        public Textbox()
+        {
+            OutlineThickness = 1;
+        }
 
         private void ProcessInput()
         {
@@ -100,6 +107,11 @@ namespace ScrapBox.Framework.ECS.Components
                 HorizontalPadding = DEFAULT_HORIZONTAL_PADDING;
             }
 
+            if (PlaceholderColor == default)
+            {
+                PlaceholderColor = Color.White;
+            }
+
             lastErase = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             Input = string.Empty;
@@ -112,7 +124,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             if (!ReadOnly)
             {
-                if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(WorldManager.CurrentScene.MainCamera), Shape.Verts))
+                if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verts))
                 {
                     focused = true;
                 }
@@ -143,11 +155,11 @@ namespace ScrapBox.Framework.ECS.Components
         {
             if (focused)
             {
-                Renderer.RenderPolygonOutline(Shape.Verts, FocusColor, mainCamera);
+                Renderer.RenderPolygonOutline(Shape.Verts, FocusColor, mainCamera, null, OutlineThickness);
             }
             else
             {
-                Renderer.RenderPolygonOutline(Shape.Verts, BorderColor, mainCamera);
+                Renderer.RenderPolygonOutline(Shape.Verts, BorderColor, mainCamera, null, OutlineThickness);
             }
 
             ScrapVector dims;
@@ -155,7 +167,7 @@ namespace ScrapBox.Framework.ECS.Components
             {
                 dims = Renderer.MeasureText(Font, Placeholder);
                 Renderer.RenderText(Font, Placeholder, new ScrapVector(Transform.Position.X - Transform.Dimensions.X / 2 + HorizontalPadding,
-                    Transform.Position.Y - dims.Y / 2), Color.White, mainCamera);
+                    Transform.Position.Y - dims.Y / 2), PlaceholderColor, mainCamera);
             }
             else
             {

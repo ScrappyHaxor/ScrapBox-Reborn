@@ -66,7 +66,7 @@ namespace ScrapBox.Framework.ECS.Systems
             DynamicBodies.Clear();
         }
 
-        public override void Update(double dt)
+        public override void Tick(double dt)
         {
             watch.Restart();
 
@@ -84,7 +84,7 @@ namespace ScrapBox.Framework.ECS.Systems
             TimeTaken = watch.ElapsedMilliseconds / 1000;
         }
 
-        public override void Draw(Camera mainCamera)
+        public override void Render(Camera mainCamera)
         {
 
         }

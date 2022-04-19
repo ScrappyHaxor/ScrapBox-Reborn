@@ -9,6 +9,12 @@ using ScrapBox.Framework.Math;
 
 namespace ScrapBox.Framework.ECS.Components
 {
+	public enum SpriteMode
+    {
+		SCALE,
+		TILE
+    }
+
 	public class Sprite2D : Component
 	{
         public override string Name => "Sprite2D";
@@ -17,6 +23,7 @@ namespace ScrapBox.Framework.ECS.Components
 		public ScrapVector Position { get { if (Transform == null) return default; return Transform.Position; } }
 		public double Rotation { get { if (Transform == null) return default; return Transform.Rotation; } }
 		public Texture2D Texture { get; set; }
+		public SpriteMode Mode { get; set; }
 		public ScrapVector Scale { get { return new ScrapVector(Texture.Width / Transform.Dimensions.X, Texture.Height / Transform.Dimensions.Y); } }	
 		public Rectangle SourceRectangle { get; set; }
 		public Color TintColor { get; set; }
@@ -47,7 +54,11 @@ namespace ScrapBox.Framework.ECS.Components
 			if (SourceRectangle == default)
 				SourceRectangle = new Rectangle(0, 0, Texture.Width, Texture.Height);
 
-			WorldManager.GetSystem<SpriteSystem>().RegisterSprite(this);
+
+			if (Layer == null)
+				Layer = Owner.Layer;
+
+			Layer.GetSystem<SpriteSystem>().RegisterSprite(this);
 			IsAwake = true;
 		}
 
@@ -56,7 +67,7 @@ namespace ScrapBox.Framework.ECS.Components
 			if (!IsAwake)
 				return;
 
-			WorldManager.GetSystem<SpriteSystem>().PurgeSprite(this);
+			Layer.GetSystem<SpriteSystem>().PurgeSprite(this);
 			IsAwake = false;
         }
 	}

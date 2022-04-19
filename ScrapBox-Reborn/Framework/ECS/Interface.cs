@@ -23,7 +23,10 @@ namespace ScrapBox.Framework.ECS
             if (!success)
                 return;
 
-            WorldManager.GetSystem<InterfaceSystem>().RegisterInterface(this);
+            if (Layer == null)
+                Layer = Owner.Layer;
+
+            Layer.GetSystem<InterfaceSystem>().RegisterInterface(this);
             IsAwake = true;
         }
 
@@ -32,7 +35,7 @@ namespace ScrapBox.Framework.ECS
             if (!IsAwake)
                 return;
 
-            WorldManager.GetSystem<InterfaceSystem>().PurgeInterface(this);
+            Layer.GetSystem<InterfaceSystem>().PurgeInterface(this);
             IsAwake = false;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using ScrapBox.Framework.Level;
+using ScrapBox.Framework.Managers;
 
 namespace ScrapBox.Framework.ECS
 {
@@ -8,13 +9,19 @@ namespace ScrapBox.Framework.ECS
     {
         public abstract List<Entity> Register { get; set; }
 
-        protected EntityCollection()
+        protected readonly Layer layer;
+
+        protected EntityCollection(Layer layer)
         {
+            this.layer = layer;
+
             Register = new List<Entity>();
         }
 
         public virtual void Awake()
         {
+            layer.RegisterEntityCollection(this);
+
             foreach (Entity e in Register)
             {
                 e.Awake();
@@ -23,26 +30,32 @@ namespace ScrapBox.Framework.ECS
 
         public virtual void Sleep()
         {
+            layer.PurgeEntityCollection(this);
+
             foreach (Entity e in Register)
             {
                 e.Sleep();
             }
         }
 
-        public virtual void Update(double dt)
+        public virtual void PreLayerTick(double dt)
         {
-            foreach (Entity e in Register)
-            {
-                e.Update(dt);
-            }
+
         }
 
-        public virtual void Draw(Camera mainCamera)
+        public virtual void PostLayerTick(double dt)
         {
-            foreach (Entity e in Register)
-            {
-                e.Draw(mainCamera);
-            }
+
+        }
+
+        public virtual void PreLayerRender(Camera mainCamera)
+        {
+
+        }
+
+        public virtual void PostLayerRender(Camera mainCamera)
+        {
+
         }
     }
 }

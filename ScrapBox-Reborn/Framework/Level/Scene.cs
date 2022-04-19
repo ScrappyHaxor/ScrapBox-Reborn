@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Pathfinding;
+using System.Collections.Generic;
 
 namespace ScrapBox.Framework.Level
 {
@@ -14,6 +15,7 @@ namespace ScrapBox.Framework.Level
 		public GraphicsDeviceManager Graphics { get; set; }
 		public Camera MainCamera { get; set; }
         public NodeMap NodeMap { get; set; }
+        public LayerStack Stack { get; set; }
 
         protected Scene(ScrapApp app)
         {
@@ -29,6 +31,11 @@ namespace ScrapBox.Framework.Level
             {
                 Zoom = 1
             };
+
+            Stack = new LayerStack();
+            Stack.InsertAt(0, new Layer("Background"));
+            Stack.InsertAt(1, new Layer("Foreground"));
+            Stack.InsertAt(2, new Layer("UI"));
         }
 
         public virtual void LoadAssets()
@@ -51,17 +58,30 @@ namespace ScrapBox.Framework.Level
         {
             Renderer.PostProcessing = null;
             NodeMap.Purge();
+            Stack.Reset();
+            Stack.Purge();
         }
 
-		public virtual void Update(double dt)
+		public virtual void PreStackTick(double dt)
         {
             MainCamera.Update(Graphics.GraphicsDevice.Viewport);
             PathingManager.Update();
+            Stack.Update(dt);
         }
 
-		public virtual void Draw()
+        public virtual void PostStackTick(double dt)
         {
-            
+
+        }
+
+		public virtual void PreStackRender()
+        {
+            Stack.Render(MainCamera);
+        }
+
+        public virtual void PostStackRender()
+        {
+
         }
 	}
 }

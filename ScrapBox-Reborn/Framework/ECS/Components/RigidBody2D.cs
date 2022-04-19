@@ -106,7 +106,10 @@ namespace ScrapBox.Framework.ECS.Components
 
 			I = Mass * (Transform.Dimensions.X * Transform.Dimensions.X + Transform.Dimensions.Y * Transform.Dimensions.Y) / 12.0;
 
-			WorldManager.GetSystem<PhysicsSystem>().RegisterBody(this);
+			if (Layer == null)
+				Layer = Owner.Layer;
+
+			Layer.GetSystem<PhysicsSystem>().RegisterBody(this);
 			IsAwake = true;
 		}
 
@@ -115,7 +118,7 @@ namespace ScrapBox.Framework.ECS.Components
 			if (!IsAwake)
 				return;
 
-			WorldManager.GetSystem<PhysicsSystem>().PurgeBody(this);
+			Layer.GetSystem<PhysicsSystem>().PurgeBody(this);
 			IsAwake = false;
         }
     }

@@ -22,7 +22,8 @@ namespace ScrapBox.Framework.Services
         internal static Texture2D pixel;
         internal static Color pixelColor;
         internal static BasicEffect defaultShader;
-        internal static RenderTarget2D renderTarget;
+
+        internal static RenderTarget2D sceneTarget;
 
         public const int MAX_CIRCLE_POINTS = 256;
         public const int MIN_CIRCLE_POINTS = 8;
@@ -45,7 +46,7 @@ namespace ScrapBox.Framework.Services
                 TextureEnabled = true
             };
 
-            renderTarget = new RenderTarget2D(Batch.GraphicsDevice,
+            sceneTarget = new RenderTarget2D(Batch.GraphicsDevice,
                 batch.GraphicsDevice.PresentationParameters.BackBufferWidth, batch.GraphicsDevice.PresentationParameters.BackBufferHeight,
                 false,
                 batch.GraphicsDevice.PresentationParameters.BackBufferFormat,
@@ -56,14 +57,22 @@ namespace ScrapBox.Framework.Services
 
         internal static void BeginSceneRender()
         {
-            Batch.GraphicsDevice.SetRenderTarget(renderTarget);
+            Batch.GraphicsDevice.SetRenderTarget(sceneTarget);
             Batch.GraphicsDevice.Clear(ClearColor);
             Batch.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
         }
 
-        public static void BeginRenderToTexture(RenderTarget2D renderTarget)
+        public static void BeginRenderToTarget(RenderTarget2D renderTarget)
         {
             Batch.GraphicsDevice.SetRenderTarget(renderTarget);
+            Batch.GraphicsDevice.Clear(Color.Transparent);
+        }
+
+        public static void RenderTargetToScene(RenderTarget2D renderTarget)
+        {
+            batch.Begin(SpriteSortMode.Immediate);
+            batch.Draw(renderTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
+            batch.End();
         }
 
         internal static void BeginRender(Color? color = null, Camera camera = null, Effect shader = null, SamplerState sampler = null)
@@ -101,9 +110,9 @@ namespace ScrapBox.Framework.Services
             Batch.End();
         }
 
-        public static void EndRenderToTexture()
+        public static void EndRenderToTarget()
         {
-            Batch.GraphicsDevice.SetRenderTarget(null);
+            Batch.GraphicsDevice.SetRenderTarget(sceneTarget);
         }
 
         internal static void EndSceneRender()
@@ -112,7 +121,7 @@ namespace ScrapBox.Framework.Services
 
             Batch.GraphicsDevice.Clear(ClearColor);
             batch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, effect: PostProcessing);
-            batch.Draw(renderTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
+            batch.Draw(sceneTarget, new Rectangle(0, 0, batch.GraphicsDevice.Viewport.Width, batch.GraphicsDevice.Viewport.Height), Color.White);
             batch.End();
         }
 
@@ -175,6 +184,71 @@ namespace ScrapBox.Framework.Services
         }
         #endregion
 
+        #region RenderTileable
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, Camera camera = null, Effect shader = null)
+        {
+            RenderTileable(texture, position, dimensions, camera, shader);
+        }
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, float rotation, 
+            Camera camera = null, Effect shader = null)
+        {
+            RenderTileable(texture, position, dimensions, rotation, Color.White, camera, shader);
+        }
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, float rotation, Color tintColor, 
+            Camera camera = null, Effect shader = null)
+        {
+            RenderTileable(texture, position, dimensions, rotation, tintColor, SpriteEffects.None, camera, shader);
+        }
+
+
+        public static void RenderTileable(Sprite2D sprite, Camera camera = null)
+        {
+            RenderTileable(sprite.Texture, sprite.Position, sprite.Transform.Dimensions, (float)sprite.Rotation,
+                sprite.TintColor, sprite.Effects, camera, sprite.Shader);
+        }
+
+        public static void RenderTileable(Texture2D texture, ScrapVector position, ScrapVector dimensions, float rotation, Color tintColor,
+                SpriteEffects effects, Camera camera, Effect shader = null, float depth = 0)
+        {
+            if (texture == null)
+            {
+                LogService.Log("Renderer2D", "RenderTileable", "Tried to render null texture.", Severity.WARNING);
+                return;
+            }
+
+            //Culling
+            if (camera != null)
+            {
+                if (!camera.InView(position, dimensions))
+                    return;
+            }
+
+            RenderDiagnostics.Calls++;
+
+            //TODO: Fix this mess
+            BeginRender(null, camera, shader, SamplerState.LinearClamp);
+            for (int x = (int)(position.X - dimensions.X / 2); x < (int)(position.X + dimensions.X / 2); x += texture.Width)
+            {
+                for (int y = (int)(position.Y - dimensions.Y / 2); y < (int)(position.Y + dimensions.Y / 2); y += texture.Height)
+                {
+                    Rectangle sourceRectangle = new Rectangle(0, 0, texture.Width, texture.Height);
+                    if (x + texture.Width > position.X + dimensions.X / 2)
+                        sourceRectangle.Width = texture.Width - (int)(x + texture.Width - (position.X + dimensions.X / 2));
+
+                    if (y + texture.Height > position.Y + dimensions.Y / 2)
+                        sourceRectangle.Height = texture.Height - (int)(y + texture.Height - (position.Y + dimensions.Y / 2));
+
+                    batch.Draw(texture, new Rectangle(x, y, sourceRectangle.Width, sourceRectangle.Height), sourceRectangle, tintColor, rotation, ScrapVector.Zero, effects, depth);
+                }
+            }
+            EndRender();
+        }
+
+        #endregion
+
         #region Primitives
         public static void RenderLine(ScrapVector pointA, ScrapVector pointB, Color color, Camera camera = null, Effect shader = null, double thickness = 1)
         {
@@ -196,7 +270,7 @@ namespace ScrapBox.Framework.Services
             EndRender();
         }
 
-        public static void RenderPolygonOutline(ScrapVector[] verts, Color color, Camera camera = null, Effect shader = null)
+        public static void RenderPolygonOutline(ScrapVector[] verts, Color color, Camera camera = null, Effect shader = null, double lineThickness = 1)
         {
             if (verts.Length == 0)
                 return;
@@ -212,7 +286,7 @@ namespace ScrapBox.Framework.Services
                 ScrapVector start = verts[i];
                 ScrapVector end = verts[(i + 1) % verts.Length];
 
-                RenderLine(start, end, color, camera, shader);
+                RenderLine(start, end, color, camera, shader, lineThickness);
             }
         }
 
@@ -252,19 +326,15 @@ namespace ScrapBox.Framework.Services
             EndRender();
         }
 
-        public static void RenderOutlineBox(ScrapVector position, ScrapVector dimensions, float rotation, Color color, Camera camera = null, Effect shader = null)
+        public static void RenderOutlineBox(ScrapVector position, ScrapVector dimensions, float rotation, Color color, Camera camera = null, Effect shader = null, double lineThickness = 1)
         {
             ScrapVector center = new ScrapVector(dimensions.X / 2 - (dimensions.X - pixel.Width) / 2, dimensions.Y / 2 - (dimensions.Y - pixel.Height) / 2);
             Rectangle bounds = new Rectangle((int)position.X, (int)position.Y, (int)dimensions.X, (int)dimensions.Y);
 
-            RenderDiagnostics.Calls++;
-
-            BeginRender(color, camera, shader, SamplerState.PointClamp);
-            batch.Draw(pixel, new Rectangle(bounds.X, bounds.Y - bounds.Height / 2, bounds.Width, 1), null, color, rotation, center, SpriteEffects.None, 0);
-            batch.Draw(pixel, new Rectangle(bounds.X, bounds.Y + bounds.Height / 2, bounds.Width, 1), null, color, rotation, center, SpriteEffects.None, 0);
-            batch.Draw(pixel, new Rectangle(bounds.X - bounds.Width / 2, bounds.Y, 1, bounds.Height), null, color, rotation, center, SpriteEffects.None, 0);
-            batch.Draw(pixel, new Rectangle(bounds.X + bounds.Width / 2, bounds.Y, 1, bounds.Height), null, color, rotation, center, SpriteEffects.None, 0);
-            EndRender();
+            RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y - bounds.Height / 2), new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
+            RenderLine(new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y - bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
+            RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y - bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y - bounds.Height / 2), color, camera, shader, lineThickness);
+            RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y + bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
         }
 
         public static void RenderCircle(ScrapVector position, double radius, int pointCount, Color color, Camera camera = null, Effect shader = null, int thickness = 1)
@@ -314,6 +384,12 @@ namespace ScrapBox.Framework.Services
 
         public static void RenderText(SpriteFont font, string label, ScrapVector position, Color textColor, Camera camera = null, Effect shader = null)
         {
+            if (font == null)
+            {
+                LogService.Log("Renderer2D", "RenderText", "Font provided was null.", Severity.ERROR);
+                return;
+            }
+
             RenderDiagnostics.Calls++;
 
             BeginRender(textColor, camera, shader);            

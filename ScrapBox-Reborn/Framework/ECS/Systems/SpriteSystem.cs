@@ -40,20 +40,28 @@ namespace ScrapBox.Framework.ECS.Systems
             sprites.Clear();
         }
 
-        public override void Update(double dt)
+        public override void Tick(double dt)
         {
             
         }
 
-        public override void Draw(Camera mainCamera)
+        public override void Render(Camera mainCamera)
         {
             watch.Restart();
-            foreach (Sprite2D sprite in sprites)
+            foreach (Sprite2D sprite in sprites)    
             {
                 if (!sprite.IsAwake)
                     continue;
 
-                Renderer.RenderSprite(sprite, mainCamera);
+                if (sprite.Mode == SpriteMode.SCALE)
+                {
+                    Renderer.RenderSprite(sprite, mainCamera);
+                }
+                else if (sprite.Mode == SpriteMode.TILE)
+                {
+                    Renderer.RenderTileable(sprite, mainCamera);
+                }
+                
             }
 
             TimeTaken = watch.ElapsedMilliseconds / 1000;

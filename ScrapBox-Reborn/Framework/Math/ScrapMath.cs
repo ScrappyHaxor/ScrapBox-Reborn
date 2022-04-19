@@ -295,5 +295,10 @@ namespace ScrapBox.Framework.Math
 
 			return Floor(((n + TileSize - 1) / TileSize)) * TileSize;
         }
+
+		public static double SnapOnGrid(double n, double gridSize)
+        {
+			return ScrapMath.Round(n / gridSize) * gridSize;
+		}
 	}
 }
