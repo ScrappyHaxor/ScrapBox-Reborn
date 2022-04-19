@@ -157,9 +157,9 @@ namespace ScrapBox.Framework.ECS.Systems
                         double bottom = transformA.Position.Y + transformA.Dimensions.Y / 2 + 1;
 
 
-                        RayResult leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2 + 2, bottom)));
-                        RayResult rightRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X + transformB.Dimensions.X / 2 - 2, bottom)));
-                        RayResult midRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X, bottom)));
+                        RayResult leftRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X - transformA.Dimensions.X / 2 + 2, bottom)));
+                        RayResult rightRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X + transformA.Dimensions.X / 2 - 2, bottom)));
+                        RayResult midRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X, bottom)));
 
                         if (leftRay.hit || midRay.hit || rightRay.hit)
                         {
