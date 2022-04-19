@@ -54,6 +54,19 @@ namespace ScrapBox.Framework.ECS.Components
 			return (State == RigidState.REST_STATIC || State == RigidState.REST_DYNAMIC) ? true : false;
         }
 
+		public bool Bounce()
+		{
+			CollisionSystem collisionSystem = WorldManager.GetSystem<CollisionSystem>();
+
+			double leftX = Transform.Position.X - Transform.Dimensions.X / 2;
+			bool leftCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, Transform.Position.Y / 2)));
+
+			double rightX = Transform.Position.X + Transform.Dimensions.X / 2;
+			bool rightCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(rightX, Transform.Position.Y / 2)));
+
+			return leftCollision || rightCollision;
+		}
+
 		internal void ApplyForces(double dt, double iterations)
 		{
 			if (!IsAwake)
