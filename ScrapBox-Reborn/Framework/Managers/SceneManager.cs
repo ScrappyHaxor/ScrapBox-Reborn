@@ -56,6 +56,14 @@ namespace ScrapBox.Framework.Managers
                     Thread.Sleep(1);
                 }
 
+                Scene tempScene;
+                bool success = Scenes.TryGetValue(name, out tempScene);
+                if (!success)
+                {
+                    LogService.Log("WorldManager", "SwapScene", $"Scene \"{name}\" does not exist.", Severity.ERROR);
+                    return;
+                }
+
                 swappingScene = true;
                 if (CurrentScene != null)
                 {
@@ -63,12 +71,7 @@ namespace ScrapBox.Framework.Managers
                     CurrentScene.UnloadAssets();
                 }
 
-                bool success = Scenes.TryGetValue(name, out CurrentScene);
-                if (!success)
-                {
-                    LogService.Log("WorldManager", "SwapScene", $"Scene \"{name}\" does not exist.", Severity.ERROR);
-                    return;
-                }
+                CurrentScene = tempScene;
 
                 CurrentScene.Initialize();
                 CurrentScene.LoadAssets();
