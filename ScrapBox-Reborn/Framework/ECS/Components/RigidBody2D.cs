@@ -58,24 +58,13 @@ namespace ScrapBox.Framework.ECS.Components
 		{
 			CollisionSystem collisionSystem = WorldManager.GetSystem<CollisionSystem>();
 
-			double feet = Transform.Position.Y + Transform.Dimensions.Y / 2 + 1;
-			bool feetCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(Transform.Position.X, feet)));
-
 			double leftX = Transform.Position.X - Transform.Dimensions.X / 2;
 			bool leftCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, Transform.Position.Y / 2)));
 
 			double rightX = Transform.Position.X + Transform.Dimensions.X / 2;
 			bool rightCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(rightX, Transform.Position.Y / 2)));
 
-			if (feetCollision == false)
-			{
-				if (leftCollision == true || rightCollision == true)
-				{
-					return true;
-				}
-			}
-
-			return false;
+			return leftCollision || rightCollision;
 		}
 
 		internal void ApplyForces(double dt, double iterations)

@@ -144,8 +144,8 @@ namespace ScrapBox.Framework.ECS.Systems
                         Transform transformA = colliderA.Transform;
                         double bottom = transformA.Position.Y + transformA.Dimensions.Y / 2 + 1;
 
-                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X - transformA.Dimensions.X / 2, bottom)));
-                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X + transformA.Dimensions.X / 2, bottom)));
+                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X - transformA.Dimensions.X / 2 + 2, bottom)));
+                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X + transformA.Dimensions.X / 2 - 2, bottom)));
                         bool midRay = Raycast(new PointRay(new ScrapVector(transformA.Position.X, bottom)));
 
                         if (leftRay || midRay || rightRay)
@@ -163,8 +163,8 @@ namespace ScrapBox.Framework.ECS.Systems
                         Transform transformB = colliderB.Transform;
                         double bottom = transformB.Position.Y + transformB.Dimensions.Y / 2 + 1;
 
-                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2, bottom)));
-                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X + transformB.Dimensions.X / 2, bottom)));
+                        bool leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2 + 2, bottom)));
+                        bool rightRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X + transformB.Dimensions.X / 2 - 2, bottom)));
                         bool midRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X, bottom)));
 
                         if (leftRay || midRay || rightRay)
