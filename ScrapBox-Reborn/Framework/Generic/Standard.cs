@@ -15,6 +15,20 @@ namespace ScrapBox.Framework.Generic
 			b = tmp;
 		}
 
+		public static T FetchIndex<T>(int index, T[] array)
+        {
+			if (index >= array.Length)
+			{
+				return array[index % array.Length];
+			}
+			else if (index < 0)
+            {
+				return array[index % array.Length + array.Length];
+            }
+
+			return array[index];
+        }
+
 		public static T[,] Resize2DArray<T>(T[,] original, int rows, int columns)
         {
 			T[,] newArray = new T[rows, columns];
