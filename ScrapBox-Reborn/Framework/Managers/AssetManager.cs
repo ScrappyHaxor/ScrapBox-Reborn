@@ -39,20 +39,18 @@ namespace ScrapBox.Framework.Managers
         {
             if (args[1] == TEXTURE2D_NAME)
             {
-                textureRegister.Add(args[0], content.Load<Texture2D>(args[0]));
-                return true;
+                return LoadTexture(args[0], content);
             }
             else if (args[1] == FONT_NAME)
             {
-                fontRegister.Add(args[0], content.Load<SpriteFont>(args[0]));
-                return true;
+                return LoadFont(args[0], content);
             }
             else if (args[1] == SHADER_NAME)
             {
-                shaderRegister.Add(args[0], content.Load<Effect>(args[0]));
-                return true;
+                return LoadShader(args[0], content);
             }
 
+            LogService.Log("AssetManager", "ParseArgs", "Unknown resource type.", Severity.ERROR);
             return false;
         }
 
@@ -108,22 +106,52 @@ namespace ScrapBox.Framework.Managers
              LogService.Log("AssetManager", "LoadResourceFile", $"Finished loading resource file {name}. {entryNumber} assets loaded successfully.", Severity.INFO);
         }
 
-        public static void LoadTexture(string name, ContentManager content)
+        public static bool LoadTexture(string name, ContentManager content)
         {
-            Texture2D texture = content.Load<Texture2D>(name);
-            textureRegister.Add(name, texture);
+            try
+            {
+                Texture2D texture = content.Load<Texture2D>(name);
+                textureRegister.Add(name, texture);
+                return true;
+            }
+            catch
+            {
+                LogService.Log("AssetManager", "LoadTexture", "Texture is not built. Check the Monogame pipeline.", Severity.ERROR);
+                return false;
+            }
+
         }
 
-        public static void LoadFont(string name, ContentManager content)
+        public static bool LoadFont(string name, ContentManager content)
         {
-            SpriteFont font = content.Load<SpriteFont>(name);
-            fontRegister.Add(name, font);
+            try
+            {
+                SpriteFont font = content.Load<SpriteFont>(name);
+                fontRegister.Add(name, font);
+                return true;
+            }
+            catch
+            {
+                LogService.Log("AssetManager", "LoadFont", "Font is not built. Check the Monogame pipeline.", Severity.ERROR);
+                return false;
+            }
+
         }
 
-        public static void LoadShader(string name, ContentManager content)
+        public static bool LoadShader(string name, ContentManager content)
         {
-            Effect shader = content.Load<Effect>(name);
-            shaderRegister.Add(name, shader);
+            try
+            {
+                Effect shader = content.Load<Effect>(name);
+                shaderRegister.Add(name, shader);
+                return true;
+            }
+            catch
+            {
+                LogService.Log("AssetManager", "LoadShader", "Shader is not built. Check the Monogame pipeline.", Severity.ERROR);
+                return false;
+            }
+
         }
 
         public static void Unload(ContentManager content)
