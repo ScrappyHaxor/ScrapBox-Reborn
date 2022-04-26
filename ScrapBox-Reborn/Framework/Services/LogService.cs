@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 
 namespace ScrapBox.Framework.Services
 {
@@ -21,6 +22,13 @@ namespace ScrapBox.Framework.Services
         {
             lockObject = new object();
             logBuffer = new List<string>();
+            AppDomain.CurrentDomain.FirstChanceException += HandleException;
+        }
+
+        internal static void HandleException(object sender, FirstChanceExceptionEventArgs eventArgs)
+        {
+            Log("Runtime", "Unhandled Exception", $"{eventArgs.Exception.Message}", Severity.CRITICAL);
+            GenerateLog();
         }
 
 #if DEBUG
