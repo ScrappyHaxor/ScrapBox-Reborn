@@ -15,7 +15,7 @@ namespace ScrapBox.Framework
 	internal class InternalGame : Game
     {
 		public Action Init;
-		public Action<double> Renew;
+		public Action<double> Tick;
 		public Action<double> Render;
 
 		public GraphicsDeviceManager Graphics;
@@ -50,7 +50,7 @@ namespace ScrapBox.Framework
 
         protected override void Update(GameTime gameTime)
         {
-			Renew(ScrapMath.Deltafy(gameTime));
+			Tick(ScrapMath.Deltafy(gameTime));
 			base.Update(gameTime);
 		}
 
@@ -82,8 +82,8 @@ namespace ScrapBox.Framework
 			internalGame = new InternalGame();
 			
 			internalGame.Init += Init;
-			internalGame.Renew += Update;
-			internalGame.Render += Draw;
+			internalGame.Tick += Tick;
+			internalGame.Render += Render;
 
 			AppDomain.CurrentDomain.ProcessExit += new EventHandler(Exit);
 		}
@@ -100,15 +100,15 @@ namespace ScrapBox.Framework
 			Initialize();
         }
 
-		internal void Update(double dt)
+		internal void Tick(double dt)
 		{
-			InputManager.Update();
-			SceneManager.Update(dt);
+			InputManager.Tick();
+			SceneManager.Tick(dt);
 		}
 
-		internal void Draw(double dt)
+		internal void Render(double dt)
 		{
-			SceneManager.Draw(dt);
+			SceneManager.Render(dt);
 		}
 
 		protected virtual void Exit(object o, EventArgs e)

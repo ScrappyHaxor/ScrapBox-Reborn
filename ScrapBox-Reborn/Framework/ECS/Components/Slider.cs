@@ -35,7 +35,7 @@ namespace ScrapBox.Framework.ECS.Components
         public int UpperBound;
         public int LowerBound;
 
-        private ScrapCircle handle;
+        private Ellipse handle;
         private double handleX;
 
         private bool hovered;
@@ -122,13 +122,13 @@ namespace ScrapBox.Framework.ECS.Components
 
             handleX = Transform.Position.X;
 
-            handle = new ScrapCircle(new ScrapVector(handleX, Transform.Position.Y), HandleRadius, HandlePoints);
+            handle = new Ellipse(new ScrapVector(handleX, Transform.Position.Y), new ScrapVector(HandleRadius, HandleRadius), HandlePoints);
         }
 
         internal override void Tick()
         {
             ScrapVector mouseWorld = InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera);
-            if (Collision.IntersectPointPolygon(mouseWorld, handle.GetVerticies()))
+            if (Collision.IntersectPointPolygon(mouseWorld, handle.Verticies))
             {
                 hovered = true;
                 if (InputManager.IsButtonHeld(Input.Button.LEFT_MOUSE_BUTTON))
@@ -157,7 +157,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             handleX = ScrapMath.Clamp(handleX, Transform.Position.X - Transform.Dimensions.X / 2, Transform.Position.X + Transform.Dimensions.X / 2);
 
-            handle.Center = new ScrapVector(handleX, Transform.Position.Y);
+            handle.Position = new ScrapVector(handleX, Transform.Position.Y);
 
             double totalLength = ScrapMath.Length(new ScrapVector(Transform.Position.X + Transform.Dimensions.X / 2, 0) - 
                 new ScrapVector(Transform.Position.X - Transform.Dimensions.X / 2, 0));
@@ -179,11 +179,11 @@ namespace ScrapBox.Framework.ECS.Components
             
             if (hovered || dragging)
             {
-                Renderer.RenderPolygonOutline(handle.GetVerticies(), HandleHoverColor, mainCamera);
+                Renderer.RenderPolygonOutline(handle.Verticies, HandleHoverColor, mainCamera);
             }
             else
             {
-                Renderer.RenderPolygonOutline(handle.GetVerticies(), HandleColor, mainCamera);
+                Renderer.RenderPolygonOutline(handle.Verticies, HandleColor, mainCamera);
             }
 
             ScrapVector upperTextDims = Renderer.MeasureText(Font, UpperBound.ToString());

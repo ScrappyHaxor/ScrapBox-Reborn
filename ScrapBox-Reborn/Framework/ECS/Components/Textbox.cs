@@ -10,6 +10,7 @@ using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Input;
 using ScrapBox.Framework.Math;
+using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
@@ -21,7 +22,7 @@ namespace ScrapBox.Framework.ECS.Components
         public const double ERASE_COOLDOWN = 80;
 
         public string Placeholder;
-        public ScrapShape Shape;
+        public Polygon Shape;
         public SpriteFont Font;
         public double HorizontalPadding;
         public bool ReadOnly;
@@ -89,7 +90,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             if (Shape == null)
             {
-                Shape = ScrapRect.CreateFromCenter(Transform.Position, Transform.Dimensions);
+                Shape = new Rectangle(Transform.Position, Transform.Dimensions);
             }
 
             if (BorderColor == default)
@@ -119,12 +120,12 @@ namespace ScrapBox.Framework.ECS.Components
 
         internal override void Tick()
         {
-            Shape.Center = Transform.Position;
+            Shape.Position = Transform.Position;
             Shape.Dimensions = Transform.Dimensions;
 
             if (!ReadOnly)
             {
-                if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verts))
+                if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verticies))
                 {
                     focused = true;
                 }
@@ -155,11 +156,11 @@ namespace ScrapBox.Framework.ECS.Components
         {
             if (focused)
             {
-                Renderer.RenderPolygonOutline(Shape.Verts, FocusColor, mainCamera, null, OutlineThickness);
+                Renderer.RenderPolygonOutline(Shape.Verticies, FocusColor, mainCamera, null, OutlineThickness);
             }
             else
             {
-                Renderer.RenderPolygonOutline(Shape.Verts, BorderColor, mainCamera, null, OutlineThickness);
+                Renderer.RenderPolygonOutline(Shape.Verticies, BorderColor, mainCamera, null, OutlineThickness);
             }
 
             ScrapVector dims;

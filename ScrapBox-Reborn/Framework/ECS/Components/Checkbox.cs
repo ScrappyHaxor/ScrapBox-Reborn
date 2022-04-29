@@ -11,6 +11,7 @@ using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Input;
 using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Math;
+using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
@@ -28,7 +29,7 @@ namespace ScrapBox.Framework.ECS.Components
 
         public string BoxText;
         public bool Checked { get; set; }
-        private ScrapShape box;
+        private Polygon box;
 
         public override void Awake()
         {
@@ -43,7 +44,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             base.Awake();
 
-            box = ScrapRect.CreateFromCenter(Transform.Position, Transform.Dimensions);
+            box = new Rectangle(Transform.Position, Transform.Dimensions);
 
             if (BoxColor == default)
             {
@@ -73,10 +74,10 @@ namespace ScrapBox.Framework.ECS.Components
 
         internal override void Tick()
         {
-            box.Center = Transform.Position;
+            box.Position = Transform.Position;
             box.Dimensions = Transform.Dimensions;
 
-            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), box.GetVerticies()))
+            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), box.Verticies))
             {
                 if (InputManager.IsButtonDown(Input.Button.LEFT_MOUSE_BUTTON))
                 {
@@ -102,7 +103,7 @@ namespace ScrapBox.Framework.ECS.Components
                     CheckColor, mainCamera, thickness: CheckThickness);
             }
 
-            Renderer.RenderPolygonOutline(box.GetVerticies(), BoxColor, mainCamera);
+            Renderer.RenderPolygonOutline(box.Verticies, BoxColor, mainCamera);
 
             base.Render(mainCamera);
         }

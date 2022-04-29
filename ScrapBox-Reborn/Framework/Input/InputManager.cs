@@ -155,7 +155,7 @@ namespace ScrapBox.Framework.Input
         /// <summary>
         /// Resets the state of all keys
         /// </summary>
-        internal static void Update()
+        internal static void Tick()
         {
             KeyboardState keyState = Keyboard.GetState();
             for (int i = 0; i < keyRegister.Length; i++)
