@@ -13,41 +13,97 @@ namespace ScrapBox.Framework.Services
 
     public class TriangulationService
     {
-        public ScrapVector[] Triangulate(ScrapVector[] verts, TriangulationMethod method)
+        public bool Triangulate(ScrapVector[] verticies, TriangulationMethod method, out int[] indicies)
         {
             switch (method)
             {
                 case TriangulationMethod.EAR_CLIPPING:
-                    return EarClipping(verts);
+                    bool success = EarClipping(verticies, out indicies);
+                    return success;
             }
 
-            return default;
+            LogService.Log("TriangulationService", "Triangulate", "Unknown triangulation method.", Severity.ERROR);
+            indicies = null;
+            return false;
         }
 
-        public ScrapVector[] EarClipping(ScrapVector[] verts)
+        public bool EarClipping(ScrapVector[] verticies, out int[] indicies)
         {
-            if (verts == null)
+            indicies = null;
+
+            if (verticies == null)
             {
                 LogService.Log("TriangulationService", "EarClipping", "Array of verticies is null.", Severity.ERROR);
-                return verts;
+                return false;
             }
 
-            if (verts.Length < 3)
+            if (verticies.Length < 3)
             {
                 LogService.Log("TriangulationService", "EarClipping", "Less than 3 verticies in array.", Severity.ERROR);
-                return verts;
+                return false;
             }
 
-            int triangleCount = verts.Length - 2;
-            int totalTriangleIndexCount = triangleCount * 3;
-
-
-
-            List<ScrapVector> workingSet = new List<ScrapVector>(verts);
-            while (workingSet.Count > 3)
+            List<int> indexList = new List<int>();
+            for (int i = 0; i < verticies.Length; i++)
             {
-                
+                indexList.Add(i);
             }
+
+            int totalIndexCount = (verticies.Length - 2) * 3;
+            indicies = new int[totalIndexCount];
+
+            int currentIndexCount = 0;
+            while (indexList.Count > 3)
+            {
+                for (int i = 0; i < indexList.Count; i++)
+                {
+                    int index = Standard.FetchIndex(i, indexList.ToArray());
+                    int minusIndex = Standard.FetchIndex(i - 1, indexList.ToArray());
+                    int plusIndex = Standard.FetchIndex(i + 1, indexList.ToArray());
+
+                    ScrapVector indexVert = verticies[index];
+                    ScrapVector minusIndexVert = verticies[minusIndex];
+                    ScrapVector plusIndexVert = verticies[plusIndex];
+
+                    ScrapVector indexVertToMinusVert = minusIndexVert - indexVert;
+                    ScrapVector indexVertToPlusVert = plusIndexVert - indexVert;
+
+                    if (ScrapMath.Cross(indexVertToMinusVert, indexVertToPlusVert) < 0)
+                        continue;
+
+                    bool isEar = true;
+                    ScrapVector[] testEar = new ScrapVector[3];
+                    testEar[0] = indexVert;
+                    testEar[1] = minusIndexVert;
+                    testEar[2] = plusIndexVert;
+
+                    for (int j = 0; j < verticies.Length; j++)
+                    {
+                        if (j == index || j == minusIndex || j == plusIndex)
+                            continue;
+
+                        if (Collision.IntersectPointPolygon(verticies[j], testEar))
+                        {
+                            isEar = false;
+                            break;
+                        }
+                    }
+
+                    if (isEar)
+                    {
+                        indicies[currentIndexCount++] = minusIndex;
+                        indicies[currentIndexCount++] = index;
+                        indicies[currentIndexCount++] = plusIndex;
+
+                        indexList.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+
+            indicies[currentIndexCount++] = indexList[0];
+            indicies[currentIndexCount++] = indexList[1];
+            indicies[currentIndexCount++] = indexList[2];
 
             return default;
         }
