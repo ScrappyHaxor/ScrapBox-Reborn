@@ -9,6 +9,7 @@ using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Input;
 using ScrapBox.Framework.Level;
 using ScrapBox.Framework.Managers;
+using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
@@ -20,7 +21,7 @@ namespace ScrapBox.Framework.ECS.Components
         public Color FillColor;
         public Color BorderColor;
         public Color HoverColor;
-        public ScrapShape Shape;
+        public Polygon Shape;
         public double OutlineThickness;
 
         public EventHandler Pressed;
@@ -41,7 +42,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             if (Shape == null)
             {
-                Shape = ScrapRect.CreateFromCenter(Transform.Position, Transform.Dimensions);
+                Shape = new Rectangle(Transform.Position, Transform.Dimensions);
             }
 
             if (FillColor == default)
@@ -62,9 +63,9 @@ namespace ScrapBox.Framework.ECS.Components
 
         internal override void Tick()
         {
-            Shape.Center = Transform.Position;
+            Shape.Position = Transform.Position;
             Shape.Dimensions = Transform.Dimensions;
-            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verts))
+            if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verticies))
             {
                 Hovered = true;
                 if (InputManager.IsButtonDown(Input.Button.LEFT_MOUSE_BUTTON))
@@ -84,11 +85,11 @@ namespace ScrapBox.Framework.ECS.Components
         {
             if (Hovered)
             {
-                Renderer.RenderPolygonOutline(Shape.GetVerticies(), HoverColor, mainCamera, null, OutlineThickness);
+                Renderer.RenderPolygonOutline(Shape.Verticies, HoverColor, mainCamera, null, OutlineThickness);
             }
             else
             {
-                Renderer.RenderPolygonOutline(Shape.GetVerticies(), BorderColor, mainCamera, null, OutlineThickness);
+                Renderer.RenderPolygonOutline(Shape.Verticies, BorderColor, mainCamera, null, OutlineThickness);
             }
 
             base.Render(mainCamera);

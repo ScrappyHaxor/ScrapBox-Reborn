@@ -151,7 +151,10 @@ namespace ScrapBox.Framework.Math
             min = float.MaxValue;
             max = float.MinValue;
 
-            for (int i = 0; i < verts.Length; i ++)
+			if (verts == null || verts.Length == 0)
+				return;
+
+			for (int i = 0; i < verts.Length; i ++)
             {
                 ScrapVector v = verts[i];
                 double projection = Dot(v, axis);
@@ -206,7 +209,7 @@ namespace ScrapBox.Framework.Math
 
 		public static ScrapVector FindArithmeticMean(ScrapVector[] verts)
 		{
-			if (verts.Length == 0)
+			if (verts == null || verts.Length == 0)
 				return default;
 
 			ScrapVector sum = ScrapVector.Zero;

@@ -272,7 +272,7 @@ namespace ScrapBox.Framework.Services
 
         public static void RenderPolygonOutline(ScrapVector[] verts, Color color, Camera camera = null, Effect shader = null, double lineThickness = 1)
         {
-            if (verts.Length == 0)
+            if (verts == null || verts.Length == 0)
                 return;
 
             if (verts.Length > MAX_POLYGON_POINTS)

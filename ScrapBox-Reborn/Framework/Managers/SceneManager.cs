@@ -94,7 +94,7 @@ namespace ScrapBox.Framework.Managers
         }
 
 
-        internal static void Update(double dt)
+        internal static void Tick(double dt)
         {
             if (CurrentScene == null || swappingScene)
                 return;
@@ -105,7 +105,7 @@ namespace ScrapBox.Framework.Managers
             CurrentScene.PostStackTick(dt);
         }
 
-        internal static void Draw(double dt)
+        internal static void Render(double dt)
         {
             if (CurrentScene == null || swappingScene)
                 return;
