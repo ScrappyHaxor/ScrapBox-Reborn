@@ -6,6 +6,7 @@ using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Level;
 using ScrapBox.Framework.Diagnostics;
 using ScrapBox.Framework.Generic;
+using System;
 
 namespace ScrapBox.Framework.Services
 {
@@ -39,6 +40,10 @@ namespace ScrapBox.Framework.Services
             pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             pixel.SetData(new Color[] { new Color(255, 255, 255, 255) });
             pixelColor = new Color(255, 255, 255, 255);
+
+            RasterizerState state = new RasterizerState();
+            state.CullMode = CullMode.None;
+            batch.GraphicsDevice.RasterizerState = state;
 
             defaultShader = new BasicEffect(batch.GraphicsDevice)
             {
@@ -290,30 +295,57 @@ namespace ScrapBox.Framework.Services
             }
         }
 
-        public static void RenderPolygon(ScrapVector[] verts, Color fillColor, Color? borderColor = null, Camera camera = null, Effect shader = null)
+        public static void RenderPolygon(ScrapVector[] verticies, int[] indicies, Color fillColor, Color? borderColor = null, Camera camera = null, Effect shader = null)
         {
             if (borderColor == null)
             {
                 borderColor = fillColor;
             }
 
-            defaultShader.Texture.SetData(new Color[] { fillColor });
+            if (shader == null)
+            {
+                shader = new BasicEffect(batch.GraphicsDevice);
+            }
 
-            VertexPositionColor[] vertsPosColors = new VertexPositionColor[4];
-            vertsPosColors[0].Position = new Vector3(0, 0, 0);
-            vertsPosColors[1].Position = new Vector3(100, 0, 0);
-            vertsPosColors[2].Position = new Vector3(0, 100, 0);
-            vertsPosColors[3].Position = new Vector3(100, 100, 0);
+            BasicEffect basic = new BasicEffect(batch.GraphicsDevice);
+            basic.World = Matrix.CreateTranslation(new Vector3(-(float)camera.Position.X, (float)camera.Position.Y, 0)) * Matrix.CreateScale((float)camera.Zoom); //camera.TransformationMatrix;
+            basic.View = camera.ViewMatrix;
+            basic.Projection = camera.ProjectionMatrix;
+            basic.VertexColorEnabled = true;
 
-            short[] indicies = { 0, 2, 1, 1, 2, 3 };
+            VertexPositionColor[] verticiesColors = new VertexPositionColor[verticies.Length];
+            for (int i = 0; i < verticies.Length; i++)
+            {
+                ScrapVector vertex = verticies[i];
+                verticiesColors[i] = new VertexPositionColor(new Vector3((float)vertex.X, -(float)vertex.Y, 0), fillColor);
+            }
 
-            foreach (EffectPass pass in defaultShader.CurrentTechnique.Passes)
+            foreach (EffectPass pass in basic.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                batch.GraphicsDevice.DrawUserIndexedPrimitives(0, vertsPosColors, 0, vertsPosColors.Length, indicies, 0, indicies.Length / 3);
+                batch.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, verticiesColors, 0, verticiesColors.Length, indicies, 0, indicies.Length / 3);
             }
         }
 
+        public static void RenderPolygonWireframe(ScrapVector[] verticies, int[] indicies, Color lineColor, Camera camera = null, Effect shader = null, double lineThickness = 1)
+        {
+            for (int i = 0; i < indicies.Length; i += 3)
+            {
+                int first = indicies[i];
+                int second = indicies[i + 1];
+                int third = indicies[i + 2];
+
+                ScrapVector firstVertex = verticies[first];
+                ScrapVector secondVertex = verticies[second];
+                ScrapVector thirdVertex = verticies[third];
+
+                RenderLine(firstVertex, secondVertex, lineColor, camera, shader, lineThickness);
+                RenderLine(secondVertex, thirdVertex, lineColor, camera, shader, lineThickness);
+                RenderLine(thirdVertex, firstVertex, lineColor, camera, shader, lineThickness);
+            }
+        }
+
+        [Obsolete("Use RenderPolygon instead with a polygon from ScrapBox.Framework.Shapes and TriangulationService from ScrapBox.Framework.Services")]
         public static void RenderBox(ScrapVector position, ScrapVector dimensions, float rotation, Color color, Camera camera = null, Effect shader = null)
         {
             ScrapVector center = new ScrapVector(dimensions.X / 2 - (dimensions.X - pixel.Width) / 2, dimensions.Y / 2 - (dimensions.Y - pixel.Height) / 2);
@@ -326,6 +358,7 @@ namespace ScrapBox.Framework.Services
             EndRender();
         }
 
+        [Obsolete("Use RenderPolygonOutline instead with a polygon from ScrapBox.Framework.Shapes and TriangulationService from ScrapBox.Framework.Services")]
         public static void RenderOutlineBox(ScrapVector position, ScrapVector dimensions, float rotation, Color color, Camera camera = null, Effect shader = null, double lineThickness = 1)
         {
             ScrapVector center = new ScrapVector(dimensions.X / 2 - (dimensions.X - pixel.Width) / 2, dimensions.Y / 2 - (dimensions.Y - pixel.Height) / 2);
@@ -337,6 +370,7 @@ namespace ScrapBox.Framework.Services
             RenderLine(new ScrapVector(bounds.X - bounds.Width / 2, bounds.Y + bounds.Height / 2), new ScrapVector(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2), color, camera, shader, lineThickness);
         }
 
+        [Obsolete("Use RenderPolygon instead with an ellipse from ScrapBox.Framework.Shapes and TriangulationService from ScrapBox.Framework.Services")]
         public static void RenderCircle(ScrapVector position, double radius, int pointCount, Color color, Camera camera = null, Effect shader = null, int thickness = 1)
         {
             pointCount = (int)ScrapMath.Clamp(pointCount, MIN_CIRCLE_POINTS, MAX_CIRCLE_POINTS);

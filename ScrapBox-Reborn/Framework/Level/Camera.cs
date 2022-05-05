@@ -9,17 +9,35 @@ namespace ScrapBox.Framework.Level
 {
 	public class Camera
 	{
+		public const double MinPlaneDistance = 1;
+		public const double MaxPlaneDistance = 1024;
+
 		public ScrapVector Position { get; set; }
+		public ScrapVector Origin { get; set; }
 		public Rectangle Bounds { get; internal set; }
 		public Rectangle VisibleArea { get; internal set; }
+		public Matrix ViewMatrix { get; set; }
+		public Matrix ProjectionMatrix { get; set; }
 		public Matrix TransformationMatrix { get; set; }
 		public double Zoom { get; set; }
+		public double Rotation { get; set; }
+		public double AspectRatio { get; set; }
+		public double FieldOfView { get; set; }
+
+		private double optimalZ;
+		private double currentZ;
 
 		public Camera(Viewport viewport)
 		{
 			Position = ScrapVector.Zero;
 			Bounds = viewport.Bounds;
+			Origin = new ScrapVector(Bounds.Width / 2, Bounds.Height / 2);
+			AspectRatio = (double)Bounds.Width / Bounds.Height;
 			Zoom = 1;
+			FieldOfView = ScrapMath.ToRadians(45);
+
+			optimalZ = (0.5 * Bounds.Height) / ScrapMath.Tan(0.5 * FieldOfView);
+			currentZ = optimalZ;
 		}
 
 		public bool InView(ScrapVector position, ScrapVector dimensions)
@@ -36,12 +54,22 @@ namespace ScrapBox.Framework.Level
 		public void Update(Viewport viewport)
 		{
 			Bounds = viewport.Bounds;
+			Origin = new ScrapVector(Bounds.Width / 2, Bounds.Height / 2);
+			AspectRatio = (double)Bounds.Width / Bounds.Height;
+			optimalZ = (0.5 * Bounds.Height) / ScrapMath.Tan(0.5 * FieldOfView);
+
+			//Update view matrix
+			ViewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, (float)currentZ), new Vector3(0, 0, 0), Vector3.Up);
+
+			//ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView((float)FieldOfView, (float)AspectRatio, (float)MinPlaneDistance, (float)MaxPlaneDistance);
+			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView((float)FieldOfView, (float)AspectRatio, 0.01f, 100000f);
 
 			//Update transformation matrix
-			TransformationMatrix = Matrix.CreateTranslation(
-					new Vector3(-(float)Position.X, -(float)Position.Y, 0)) *
+			TransformationMatrix = Matrix.CreateTranslation(new Vector3(-(float)Position.X, -(float)Position.Y, 0)) *
 					Matrix.CreateScale((float)Zoom) * 
 					Matrix.CreateTranslation(new Vector3(Bounds.Width * 0.5f, Bounds.Height * 0.5f, 0));
+
+			
 
 			//Update visible area
 			Matrix inverse = Matrix.Invert(TransformationMatrix);

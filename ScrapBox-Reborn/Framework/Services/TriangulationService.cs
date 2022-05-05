@@ -13,7 +13,7 @@ namespace ScrapBox.Framework.Services
 
     public class TriangulationService
     {
-        public bool Triangulate(ScrapVector[] verticies, TriangulationMethod method, out int[] indicies)
+        public static bool Triangulate(ScrapVector[] verticies, TriangulationMethod method, out int[] indicies)
         {
             switch (method)
             {
@@ -27,7 +27,7 @@ namespace ScrapBox.Framework.Services
             return false;
         }
 
-        public bool EarClipping(ScrapVector[] verticies, out int[] indicies)
+        public static bool EarClipping(ScrapVector[] verticies, out int[] indicies)
         {
             indicies = null;
 
@@ -68,7 +68,7 @@ namespace ScrapBox.Framework.Services
                     ScrapVector indexVertToMinusVert = minusIndexVert - indexVert;
                     ScrapVector indexVertToPlusVert = plusIndexVert - indexVert;
 
-                    if (ScrapMath.Cross(indexVertToMinusVert, indexVertToPlusVert) < 0)
+                    if (ScrapMath.Cross(indexVertToMinusVert, indexVertToPlusVert) > 0)
                         continue;
 
                     bool isEar = true;
@@ -105,7 +105,7 @@ namespace ScrapBox.Framework.Services
             indicies[currentIndexCount++] = indexList[1];
             indicies[currentIndexCount++] = indexList[2];
 
-            return default;
+            return true;
         }
 
     }

@@ -28,6 +28,8 @@ namespace ScrapBox.Framework.ECS.Components
 
         public bool Hovered;
 
+        private int[] indicies;
+
         public Button()
         {
             OutlineThickness = 1;
@@ -47,17 +49,17 @@ namespace ScrapBox.Framework.ECS.Components
 
             if (FillColor == default)
             {
-                FillColor = Color.White;
+                FillColor = Color.Transparent;
             }
 
             if (BorderColor == default)
             {
-                BorderColor = FillColor;
+                BorderColor = Color.Transparent;
             }
 
             if (HoverColor == default)
             {
-                HoverColor = FillColor;
+                HoverColor = Color.Transparent;
             }
         }
 
@@ -65,6 +67,8 @@ namespace ScrapBox.Framework.ECS.Components
         {
             Shape.Position = Transform.Position;
             Shape.Dimensions = Transform.Dimensions;
+            TriangulationService.Triangulate(Shape.Verticies, TriangulationMethod.EAR_CLIPPING, out indicies);
+
             if (Collision.IntersectPointPolygon(InputManager.GetMouseWorldPosition(SceneManager.CurrentScene.MainCamera), Shape.Verticies))
             {
                 Hovered = true;
@@ -85,10 +89,14 @@ namespace ScrapBox.Framework.ECS.Components
         {
             if (Hovered)
             {
+                Renderer.RenderPolygon(Shape.Verticies, indicies, HoverColor, null, mainCamera);
+
                 Renderer.RenderPolygonOutline(Shape.Verticies, HoverColor, mainCamera, null, OutlineThickness);
             }
             else
             {
+                Renderer.RenderPolygon(Shape.Verticies, indicies, FillColor, null, mainCamera);
+
                 Renderer.RenderPolygonOutline(Shape.Verticies, BorderColor, mainCamera, null, OutlineThickness);
             }
 
