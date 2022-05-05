@@ -15,7 +15,7 @@ namespace ScrapBox.Framework
 	internal class InternalGame : Game
     {
 		public Action Init;
-		public Action<double> Tick;
+		public new Action<double> Tick;
 		public Action<double> Render;
 
 		public GraphicsDeviceManager Graphics;

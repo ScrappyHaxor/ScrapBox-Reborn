@@ -99,6 +99,11 @@ namespace ScrapBox.Framework.Math
 			return System.Math.Sin(theta);
         }
 
+		public static double Tan(double theta)
+        {
+			return System.Math.Tan(theta);
+        }
+
 		public static ScrapVector Normalize(ScrapVector v)
 		{
 			double length = Length(v);
