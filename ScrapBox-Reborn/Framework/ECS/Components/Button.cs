@@ -89,13 +89,13 @@ namespace ScrapBox.Framework.ECS.Components
         {
             if (Hovered)
             {
-                Renderer.RenderPolygon(Shape.Verticies, indicies, HoverColor, null, mainCamera);
+                Renderer.RenderPolygon(Shape.Verticies, indicies, HoverColor, mainCamera);
 
                 Renderer.RenderPolygonOutline(Shape.Verticies, HoverColor, mainCamera, null, OutlineThickness);
             }
             else
             {
-                Renderer.RenderPolygon(Shape.Verticies, indicies, FillColor, null, mainCamera);
+                Renderer.RenderPolygon(Shape.Verticies, indicies, FillColor, mainCamera);
 
                 Renderer.RenderPolygonOutline(Shape.Verticies, BorderColor, mainCamera, null, OutlineThickness);
             }

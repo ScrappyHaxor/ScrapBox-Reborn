@@ -12,6 +12,7 @@ using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Input;
 using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Generic;
+using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
@@ -35,18 +36,13 @@ namespace ScrapBox.Framework.ECS.Components
         public int UpperBound;
         public int LowerBound;
 
+        private Rectangle backRect;
+
         private Ellipse handle;
         private double handleX;
 
         private bool hovered;
         private bool dragging;
-
-        private double MiddleRatio(int minBound, int maxBound)
-        {
-            double middle = (maxBound + minBound) / 2;
-
-            return 0;
-        }
 
         public void SetValue(int value)
         {
@@ -122,6 +118,7 @@ namespace ScrapBox.Framework.ECS.Components
 
             handleX = Transform.Position.X;
 
+            backRect = new Rectangle(Transform.Position, Transform.Dimensions);
             handle = new Ellipse(new ScrapVector(handleX, Transform.Position.Y), new ScrapVector(HandleRadius, HandleRadius), HandlePoints);
         }
 
@@ -155,6 +152,9 @@ namespace ScrapBox.Framework.ECS.Components
                 handleX = mouseWorld.X;
             }
 
+            backRect.Position = Transform.Position;
+            backRect.Dimensions = Transform.Dimensions;
+
             handleX = ScrapMath.Clamp(handleX, Transform.Position.X - Transform.Dimensions.X / 2, Transform.Position.X + Transform.Dimensions.X / 2);
 
             handle.Position = new ScrapVector(handleX, Transform.Position.Y);
@@ -174,16 +174,19 @@ namespace ScrapBox.Framework.ECS.Components
 
         internal override void Render(Camera mainCamera)
         {
-            Renderer.RenderBox(Transform.Position, Transform.Dimensions, 0, BarColor, mainCamera);
-            Renderer.RenderOutlineBox(Transform.Position, Transform.Dimensions, 0, BarBorderColor, mainCamera);
-            
+            TriangulationService.Triangulate(backRect.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] barIndicies);
+            Renderer.RenderPolygon(backRect.Verticies, barIndicies, BarColor, mainCamera);
+            Renderer.RenderPolygonOutline(backRect.Verticies, BarBorderColor, mainCamera);
+
+            TriangulationService.Triangulate(handle.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] handleIndicies);
+
             if (hovered || dragging)
             {
-                Renderer.RenderPolygonOutline(handle.Verticies, HandleHoverColor, mainCamera);
+                Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleHoverColor, mainCamera);
             }
             else
             {
-                Renderer.RenderPolygonOutline(handle.Verticies, HandleColor, mainCamera);
+                Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleColor, mainCamera);
             }
 
             ScrapVector upperTextDims = Renderer.MeasureText(Font, UpperBound.ToString());

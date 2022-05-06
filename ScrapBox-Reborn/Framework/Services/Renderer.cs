@@ -295,13 +295,8 @@ namespace ScrapBox.Framework.Services
             }
         }
 
-        public static void RenderPolygon(ScrapVector[] verticies, int[] indicies, Color fillColor, Color? borderColor = null, Camera camera = null, Effect shader = null)
+        public static void RenderPolygon(ScrapVector[] verticies, int[] indicies, Color fillColor, Camera camera = null, Effect shader = null)
         {
-            if (borderColor == null)
-            {
-                borderColor = fillColor;
-            }
-
             if (shader == null)
             {
                 shader = new BasicEffect(batch.GraphicsDevice);
