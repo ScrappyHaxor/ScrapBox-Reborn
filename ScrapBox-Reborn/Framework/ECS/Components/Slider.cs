@@ -178,15 +178,16 @@ namespace ScrapBox.Framework.ECS.Components
             Renderer.RenderPolygon(backRect.Verticies, barIndicies, BarColor, mainCamera);
             Renderer.RenderPolygonOutline(backRect.Verticies, BarBorderColor, mainCamera);
 
-            TriangulationService.Triangulate(handle.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] handleIndicies);
-
+            //TriangulationService.Triangulate(handle.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] handleIndicies);
             if (hovered || dragging)
             {
-                Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleHoverColor, mainCamera);
+                //Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleHoverColor, mainCamera);
+                Renderer.RenderPolygonOutline(handle.Verticies, HandleHoverColor, mainCamera);
             }
             else
             {
-                Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleColor, mainCamera);
+                //Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleColor, mainCamera);
+                Renderer.RenderPolygonOutline(handle.Verticies, HandleColor, mainCamera);
             }
 
             ScrapVector upperTextDims = Renderer.MeasureText(Font, UpperBound.ToString());
