@@ -81,7 +81,10 @@ namespace ScrapBox.Framework.Managers
         {
             LogService.Log("AssetManager", "LoadResourceFile", $"Loading resource file {name}", Severity.INFO);
 
-             if (!File.Exists($"{name}.sResource"))
+            //remove when sounds are loaded properly through resource file
+            SoundManager.LoadSound(content);
+
+            if (!File.Exists($"{name}.sResource"))
              {
                  LogService.Log("AssetManager", "LoadResourceFile", $"Resource file: {name}.sResource could not be found.", 
                              Severity.CRITICAL);
