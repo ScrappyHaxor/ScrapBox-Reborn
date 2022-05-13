@@ -90,7 +90,12 @@ namespace ScrapBox.Framework.Services
         {
             lock(lockObject)
             {
-                StreamWriter writer = new StreamWriter("latest.txt");
+                if (!Directory.Exists("logs"))
+                {
+                    Directory.CreateDirectory("logs");
+                }
+
+                StreamWriter writer = new StreamWriter($"logs/log_{DateTime.Now:dd-MM-yy}_time_{DateTime.Now:HH-mm-ss}.txt");
                 foreach (string s in logBuffer)
                 {
                     writer.WriteLine(s);

@@ -9,7 +9,9 @@ namespace ScrapBox.Framework.ECS
     {
         public abstract List<Entity> Register { get; set; }
 
-        protected readonly Layer layer;
+        public bool IsAwake { get; set; }
+
+        protected Layer layer;
 
         protected EntityCollection(Layer layer)
         {
@@ -20,22 +22,32 @@ namespace ScrapBox.Framework.ECS
 
         public virtual void Awake()
         {
-            layer.RegisterEntityCollection(this);
+            if (IsAwake)
+                return;
 
             foreach (Entity e in Register)
             {
                 e.Awake();
             }
+
+            layer.RegisterEntityCollection(this);
+
+            IsAwake = true;
         }
 
         public virtual void Sleep()
         {
-            layer.PurgeEntityCollection(this);
+            if (!IsAwake)
+                return;
 
             foreach (Entity e in Register)
             {
                 e.Sleep();
             }
+
+            layer.PurgeEntityCollection(this);
+
+            IsAwake = false;
         }
 
         public virtual void PreLayerTick(double dt)
