@@ -14,7 +14,7 @@ namespace ScrapBox.Framework.ECS
 		public bool IsAwake { get; set; }
 
 		private readonly List<Component> register = new List<Component>();
-		public readonly Layer Layer;
+		public Layer Layer;
 
 		//The entire entity component system is in need of optimization. Too many typeof and gettype
 	

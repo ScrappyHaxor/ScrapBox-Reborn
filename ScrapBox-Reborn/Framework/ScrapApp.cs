@@ -9,6 +9,7 @@ using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Managers;
 using ScrapBox.Framework.Diagnostics;
+using System.Collections.Generic;
 
 namespace ScrapBox.Framework
 {
@@ -19,6 +20,8 @@ namespace ScrapBox.Framework
 		public Action<double> Render;
 
 		public GraphicsDeviceManager Graphics;
+
+		internal Queue<Action> actionBacklog = new Queue<Action>();
 
 		public InternalGame()
         {
@@ -38,6 +41,8 @@ namespace ScrapBox.Framework
 			Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
 			Graphics.ApplyChanges();
 
+			Window.AllowUserResizing = true;
+
 			
 			Init();
 			base.Initialize();
@@ -50,6 +55,9 @@ namespace ScrapBox.Framework
 
         protected override void Update(GameTime gameTime)
         {
+			while (actionBacklog.Count > 0)
+				actionBacklog.Dequeue().Invoke();
+
 			Tick(ScrapMath.Deltafy(gameTime));
 			base.Update(gameTime);
 		}
@@ -87,6 +95,14 @@ namespace ScrapBox.Framework
 
 			AppDomain.CurrentDomain.ProcessExit += new EventHandler(Exit);
 		}
+
+		public void EnqueueChange(Action action)
+        {
+			if (action == null)
+				return;
+
+			internalGame.actionBacklog.Enqueue(action);
+        }
 
 		public void Run(string[] args)
         {

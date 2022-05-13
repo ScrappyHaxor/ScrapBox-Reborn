@@ -24,6 +24,7 @@ namespace ScrapBox.Framework.Managers
     public static class SceneManager
     {
         public static Scene CurrentScene;
+        public static Scene LoadingScene;
 
         public static DateTime Started;
 
@@ -82,6 +83,12 @@ namespace ScrapBox.Framework.Managers
 
             t.Start();
 
+            if (LoadingScene != null)
+            {
+                LoadingScene.Initialize();
+                LoadingScene.LoadAssets();
+                LoadingScene.Load(args);
+            }
         }
 
         public static void EnableDebug(SpriteFont debugFont)
@@ -96,8 +103,18 @@ namespace ScrapBox.Framework.Managers
 
         internal static void Tick(double dt)
         {
-            if (CurrentScene == null || swappingScene)
+            if (CurrentScene == null)
                 return;
+
+            if (swappingScene && LoadingScene == null)
+                return;
+
+            if (swappingScene)
+            {
+                LoadingScene.PreStackTick(dt);
+                LoadingScene.PostStackTick(dt);
+                return;
+            }
 
             currentSceneBusy = true;
 
@@ -107,8 +124,18 @@ namespace ScrapBox.Framework.Managers
 
         internal static void Render(double dt)
         {
-            if (CurrentScene == null || swappingScene)
+            if (CurrentScene == null)
                 return;
+
+            if (swappingScene && LoadingScene == null)
+                return;
+
+            if (swappingScene)
+            {
+                LoadingScene.PreStackRender();
+                LoadingScene.PostStackRender();
+                return;
+            }
 
             Renderer.BeginSceneRender();
 
