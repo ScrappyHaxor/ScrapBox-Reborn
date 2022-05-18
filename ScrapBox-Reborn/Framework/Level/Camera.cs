@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ScrapBox.Framework.Math;
 using ScrapBox.Framework.ECS;
 using ScrapBox.Framework.ECS.Components;
+using System;
 
 namespace ScrapBox.Framework.Level
 {
@@ -11,6 +12,9 @@ namespace ScrapBox.Framework.Level
 	{
 		public const double MinPlaneDistance = 1;
 		public const double MaxPlaneDistance = 1024;
+
+		public const float VirtualWidth = 1820;
+		public const float VirtualHeight = 980;
 
 		public ScrapVector Position { get; set; }
 		public ScrapVector Origin { get; set; }
@@ -66,7 +70,7 @@ namespace ScrapBox.Framework.Level
 
 			//Update transformation matrix
 			TransformationMatrix = Matrix.CreateTranslation(new Vector3(-(float)Position.X, -(float)Position.Y, 0)) *
-					Matrix.CreateScale((float)Zoom) * 
+					Matrix.CreateScale(Bounds.Width / VirtualWidth, Bounds.Height / VirtualHeight, 1.0f) * Matrix.CreateScale((float)Zoom, (float)Zoom, 1.0f) * 
 					Matrix.CreateTranslation(new Vector3(Bounds.Width * 0.5f, Bounds.Height * 0.5f, 0));
 
 			
