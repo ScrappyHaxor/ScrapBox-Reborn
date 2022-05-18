@@ -35,6 +35,13 @@ namespace ScrapBox.Framework
 			IsMouseVisible = true;
 		}
 
+		private void ClientWindowSizeChanged(object o, EventArgs e)
+        {
+			Graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+			Graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
+			Graphics.ApplyChanges();
+        }
+
         protected override void Initialize()
         {
 			Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100;
@@ -42,7 +49,7 @@ namespace ScrapBox.Framework
 			Graphics.ApplyChanges();
 
 			Window.AllowUserResizing = true;
-
+			Window.ClientSizeChanged += new EventHandler<EventArgs>(ClientWindowSizeChanged);
 			
 			Init();
 			base.Initialize();
