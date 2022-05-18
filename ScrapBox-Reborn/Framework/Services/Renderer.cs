@@ -303,7 +303,7 @@ namespace ScrapBox.Framework.Services
             }
 
             BasicEffect basic = new BasicEffect(batch.GraphicsDevice);
-            basic.World = Matrix.CreateTranslation(new Vector3(-(float)camera.Position.X, (float)camera.Position.Y, 0)) * Matrix.CreateScale((float)camera.Zoom); //camera.TransformationMatrix;
+            basic.World = Matrix.CreateTranslation(new Vector3(-(float)camera.Position.X, (float)camera.Position.Y, 0)) * Matrix.CreateScale((float)camera.Bounds.Width / Camera.VirtualWidth, (float)camera.Bounds.Height / Camera.VirtualHeight, 1.0f) * Matrix.CreateScale((float)camera.Zoom); //camera.TransformationMatrix;
             basic.View = camera.ViewMatrix;
             basic.Projection = camera.ProjectionMatrix;
             basic.VertexColorEnabled = true;
