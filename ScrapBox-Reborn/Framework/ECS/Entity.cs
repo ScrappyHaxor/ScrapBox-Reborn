@@ -33,21 +33,48 @@ namespace ScrapBox.Framework.ECS
 			register.Clear();
         }
 
-		protected bool Dependency<T>(out T entity, bool optional = false) where T : Entity
+		protected bool Dependency<T>(out T entity, bool optional = false, bool crossLayer = false) where T : Entity
 		{
 			entity = default;
 
-			if (!Layer.HasEntity<T>())
-			{
-				if (!optional)
+			if (!crossLayer)
+            {
+				if (!Layer.HasEntity<T>())
 				{
-					LogService.Log(Name, "Dependency", $"Missing dependency. Requires type {typeof(T)} to work.", Severity.ERROR);
+					if (!optional)
+						LogService.Log(Name, "Dependency", $"Missing dependency. Requires type {typeof(T)} to work.", Severity.ERROR);
+
+					return false;
 				}
 
-				return false;
+				entity = Layer.GetEntity<T>();
+			}
+			else
+            {
+				bool foundEntity = false;
+				Layer targetLayer = null;
+				List<Layer> stack = SceneManager.CurrentScene.Stack.FetchStack();
+				for (int i = 0; i < stack.Count; i++)
+                {
+					if (stack[i].HasEntity<T>())
+					{
+						foundEntity = true;
+						targetLayer = stack[i];
+						break;
+					}
+                }
+
+				if (!foundEntity)
+                {
+					if (!optional)
+						LogService.Log(Name, "Dependency", $"Missing dependency. Requires type {typeof(T)} to work.", Severity.ERROR);
+
+					return false;
+				}
+
+				entity = targetLayer.GetEntity<T>();
 			}
 
-			entity = Layer.GetEntity<T>();
 			if (!entity.IsAwake)
 			{
 				if (!optional)

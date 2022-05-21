@@ -31,6 +31,11 @@ namespace ScrapBox.Framework.Level
             return stack[(int)priority];
         }
 
+        public List<Layer> FetchStack()
+        {
+            return stack;
+        }
+
         internal void Purge()
         {
             for (int i = 0; i < stack.Count; i++)

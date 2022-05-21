@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 
 using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Level;
+using System;
 
 namespace ScrapBox.Framework.Input
 {
@@ -48,6 +49,13 @@ namespace ScrapBox.Framework.Input
             }
 
             return returnKeys;
+        }
+
+        public static void RequestKey(Action<Keys> callback)
+        {
+            List<Keys> keysDown = GetKeysDown();
+            if (keysDown.Count != 0)
+                callback(keysDown[0]);
         }
 
         /// <summary>
