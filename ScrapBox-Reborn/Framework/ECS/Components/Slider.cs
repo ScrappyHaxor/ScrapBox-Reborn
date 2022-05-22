@@ -32,13 +32,14 @@ namespace ScrapBox.Framework.ECS.Components
         public int Value { get; private set; }
         public SpriteFont Font { get; set; }
         public string Label { get; set; }
+        public int LineThickness { get; set; }
 
         public int UpperBound;
         public int LowerBound;
 
         private Rectangle backRect;
 
-        private Ellipse handle;
+        private Rectangle handle;
         private double handleX;
 
         private bool hovered;
@@ -116,10 +117,13 @@ namespace ScrapBox.Framework.ECS.Components
                 Label = "Lorem Ipsum";
             }
 
+            if (LineThickness <= 0)
+                LineThickness = 1;
+
             handleX = Transform.Position.X;
 
             backRect = new Rectangle(Transform.Position, Transform.Dimensions);
-            handle = new Ellipse(new ScrapVector(handleX, Transform.Position.Y), new ScrapVector(HandleRadius, HandleRadius), HandlePoints);
+            handle = new Rectangle(new ScrapVector(handleX, Transform.Position.Y), new ScrapVector(HandleRadius, HandleRadius));
         }
 
         internal override void Tick()
@@ -176,18 +180,18 @@ namespace ScrapBox.Framework.ECS.Components
         {
             TriangulationService.Triangulate(backRect.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] barIndicies);
             Renderer.RenderPolygon(backRect.Verticies, barIndicies, BarColor, mainCamera);
-            Renderer.RenderPolygonOutline(backRect.Verticies, BarBorderColor, mainCamera);
+            Renderer.RenderPolygonOutline(backRect.Verticies, BarBorderColor, mainCamera, null, LineThickness);
 
-            //TriangulationService.Triangulate(handle.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] handleIndicies);
+            TriangulationService.Triangulate(handle.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] handleIndicies);
             if (hovered || dragging)
             {
-                //Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleHoverColor, mainCamera);
-                Renderer.RenderPolygonOutline(handle.Verticies, HandleHoverColor, mainCamera);
+                Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleHoverColor, mainCamera);
+                Renderer.RenderPolygonOutline(handle.Verticies, HandleHoverColor, mainCamera, null, LineThickness);
             }
             else
             {
-                //Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleColor, mainCamera);
-                Renderer.RenderPolygonOutline(handle.Verticies, HandleColor, mainCamera);
+                Renderer.RenderPolygon(handle.Verticies, handleIndicies, HandleColor, mainCamera);
+                Renderer.RenderPolygonOutline(handle.Verticies, HandleColor, mainCamera, null, LineThickness);
             }
 
             ScrapVector upperTextDims = Renderer.MeasureText(Font, UpperBound.ToString());

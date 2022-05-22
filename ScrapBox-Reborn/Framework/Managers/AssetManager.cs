@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Content;
 
 using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Math;
+using Microsoft.Xna.Framework.Audio;
 
 namespace ScrapBox.Framework.Managers
 {
@@ -15,12 +16,14 @@ namespace ScrapBox.Framework.Managers
         private const string TEXTURE2D_NAME = "Texture2D";
         private const string FONT_NAME = "Font";
         private const string SHADER_NAME = "Shader";
+        private const string SOUND_NAME = "Audio";
 
         private static string[] internalResourceFile;
 
         private readonly static Dictionary<string, Texture2D> textureRegister;
         private readonly static Dictionary<string, SpriteFont> fontRegister;
         private readonly static Dictionary<string, Effect> shaderRegister;
+        private readonly static Dictionary<string, SoundEffect> soundRegister;
 
         static AssetManager()
         {
@@ -33,6 +36,7 @@ namespace ScrapBox.Framework.Managers
             textureRegister = new Dictionary<string, Texture2D>();
             fontRegister = new Dictionary<string, SpriteFont>();
             shaderRegister = new Dictionary<string, Effect>();
+            soundRegister = new Dictionary<string, SoundEffect>();
         }
 
         private static bool ParseArgs(string[] args, ContentManager content)
@@ -48,6 +52,10 @@ namespace ScrapBox.Framework.Managers
             else if (args[1] == SHADER_NAME)
             {
                 return LoadShader(args[0], content);
+            }
+            else if (args[1] == SOUND_NAME)
+            {
+                return LoadAudio(args[0], content);
             }
 
             LogService.Log("AssetManager", "ParseArgs", "Unknown resource type.", Severity.ERROR);
@@ -80,9 +88,6 @@ namespace ScrapBox.Framework.Managers
         public static void LoadResourceFile(string name, ContentManager content)
         {
             LogService.Log("AssetManager", "LoadResourceFile", $"Loading resource file {name}", Severity.INFO);
-
-            //remove when sounds are loaded properly through resource file
-            SoundManager.LoadSound(content);
 
             if (!File.Exists($"{name}.sResource"))
              {
@@ -138,7 +143,21 @@ namespace ScrapBox.Framework.Managers
                 LogService.Log("AssetManager", "LoadFont", "Font is not built. Check the Monogame pipeline.", Severity.ERROR);
                 return false;
             }
+        }
 
+        public static bool LoadAudio(string name, ContentManager content)
+        {
+            try
+            {
+                SoundEffect effect = content.Load<SoundEffect>(name);
+                soundRegister.Add(name, effect);
+                return true;
+            }
+            catch
+            {
+                LogService.Log("AssetManager", "LoadAudio", "Audio is not built. Check the Monogame pipeline.", Severity.ERROR);
+                return false;
+            }
         }
 
         public static bool LoadShader(string name, ContentManager content)
@@ -196,6 +215,17 @@ namespace ScrapBox.Framework.Managers
             }
 
             return shaderRegister.GetValueOrDefault(name);
+        }
+
+        public static SoundEffect FetchAudio(string name)
+        {
+            if (!soundRegister.ContainsKey(name))
+            {
+                LogService.Log("AssetManager", "FetchAudio", $"Tried to fetch audio that doesn't exist. ({name})", Severity.WARNING);
+                return default;
+            }
+
+            return soundRegister.GetValueOrDefault(name);
         }
     }
 }
