@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-
+using ScrapBox.Framework.Level;
+using ScrapBox.Framework.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -53,6 +54,22 @@ namespace ScrapBox.Framework.ECS.Components
 
             Foreground = new Rectangle(Transform.Position, Transform.Dimensions);
             Background = new Rectangle(Transform.Position, Transform.Dimensions);
+        }
+
+        internal override void Tick()
+        {
+            base.Tick();
+        }
+
+        internal override void Render(Camera mainCamera)
+        {
+            TriangulationService.Triangulate(Foreground.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] foreIndicies);
+            Renderer.RenderPolygon(Foreground.Verticies, foreIndicies, ForegroundColor, mainCamera);
+
+            TriangulationService.Triangulate(Background.Verticies, TriangulationMethod.EAR_CLIPPING, out int[] backIndicies);
+            Renderer.RenderPolygon(Foreground.Verticies, backIndicies, BackgroundColor, mainCamera);
+
+            base.Render(mainCamera);
         }
     }
 }
