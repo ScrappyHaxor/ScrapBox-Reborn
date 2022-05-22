@@ -22,18 +22,26 @@ namespace ScrapBox.Framework.ECS.Components
         public Rectangle Foreground;
         public Rectangle Background;
 
-        public int MaxValue { get; private set; }
-        public int MinValue { get; private set; }
-        public double CurrentValue { get; private set; }
+        public int MaxValue = 0;
+        public int MinValue = 0;
+        public double CurrentValue = 2;
 
-        public ProgressBar(int maxValue, int minValue = 0)
+        public ProgressBar()
         {
 
         }
 
         public void SetValue(double value)
         {
-            CurrentValue += value;
+            if(CurrentValue < MaxValue)
+            {
+                CurrentValue += value;
+
+                if(CurrentValue > MaxValue)
+                {
+                    CurrentValue = MaxValue;
+                }
+            }            
         }
 
         public void Reset()
@@ -54,12 +62,12 @@ namespace ScrapBox.Framework.ECS.Components
 
             if(BackgroundColor == default)
             {
-                BackgroundColor = Color.Blue;
+                BackgroundColor = Color.DarkSlateGray;
             }
 
-            if(MaxValue == 0)
+            if(MaxValue < 3)
             {
-                MaxValue = 300;
+                MaxValue = 3;
             }
 
             Foreground = new Rectangle(Transform.Position, new ScrapVector(CurrentValue, Transform.Dimensions.Y));
