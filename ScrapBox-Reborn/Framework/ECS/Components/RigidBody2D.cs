@@ -56,7 +56,12 @@ namespace ScrapBox.Framework.ECS.Components
 
 		public bool Bounce()
 		{
+			if (Layer == null)
+				return false;
+
 			CollisionSystem collisionSystem = Layer.GetSystem<CollisionSystem>();
+			if (collisionSystem == null)
+				return false;
 
 			double leftX = Transform.Position.X - Transform.Dimensions.X / 2;
 			RayResult leftCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, Transform.Position.Y / 2)));
