@@ -28,6 +28,7 @@ namespace ScrapBox.Framework.ECS.Components
         public bool ReadOnly;
         public bool Multiline;
         public double OutlineThickness;
+        public bool Centered;
 
         public Color BorderColor;
         public Color FocusColor;
@@ -35,6 +36,15 @@ namespace ScrapBox.Framework.ECS.Components
 
         private bool focused;
         public string Input;
+
+        public string GetText { get
+            {
+                if (string.IsNullOrEmpty(Input))
+                    return Placeholder;
+                else
+                    return Input;
+            } 
+        }
 
         private double lastErase;
 
@@ -53,14 +63,19 @@ namespace ScrapBox.Framework.ECS.Components
                     Input = $"{Input} ";
                 }
 
-                if ((int)k >= 65 && (int)k <= 90 || (int)k >= 97 && (int)k <= 122)
+                if (k == Keys.OemPeriod)
+                {
+                    Input = $"{Input}.";
+                }
+
+                if ((int)k >= 65 && (int)k <= 90 || (int)k >= 97 && (int)k <= 122 || (int)k >= 32 && (int)k <= 64)
                 {
                     if (Renderer.MeasureText(Font, Input).X >= Transform.Dimensions.X - HorizontalPadding * 3)
                         return;
 
                     if (InputManager.IsKeyHeld(Keys.LeftShift))
                     {
-                        Input = $"{Input}{(char)k}";
+                        Input = $"{Input}{(byte)k}";
                     }
                     else
                     {
@@ -167,14 +182,31 @@ namespace ScrapBox.Framework.ECS.Components
             if (Input == string.Empty)
             {
                 dims = Renderer.MeasureText(Font, Placeholder);
-                Renderer.RenderText(Font, Placeholder, new ScrapVector(Transform.Position.X - Transform.Dimensions.X / 2 + HorizontalPadding,
-                    Transform.Position.Y - dims.Y / 2), PlaceholderColor, mainCamera);
+
+                if (Centered)
+                {
+                    Renderer.RenderText(Font, Placeholder, new ScrapVector(-dims.X / 2, Transform.Position.Y - dims.Y / 2), PlaceholderColor, mainCamera);
+                }
+                else
+                {
+                    Renderer.RenderText(Font, Placeholder, new ScrapVector(Transform.Position.X - Transform.Dimensions.X / 2 + HorizontalPadding,
+    Transform.Position.Y - dims.Y / 2), PlaceholderColor, mainCamera);
+                }
+
             }
             else
             {
                 dims = Renderer.MeasureText(Font, Input);
-                Renderer.RenderText(Font, Input, new ScrapVector(Transform.Position.X - Transform.Dimensions.X / 2 + HorizontalPadding, 
+
+                if (Centered)
+                {
+                    Renderer.RenderText(Font, Input, new ScrapVector(-dims.X / 2, Transform.Position.Y - dims.Y / 2), Color.White, mainCamera);
+                }
+                else
+                {
+                    Renderer.RenderText(Font, Input, new ScrapVector(Transform.Position.X - Transform.Dimensions.X / 2 + HorizontalPadding,
                     Transform.Position.Y - dims.Y / 2), Color.White, mainCamera);
+                }
             }    
             
             

@@ -44,8 +44,8 @@ namespace ScrapBox.Framework
 
         protected override void Initialize()
         {
-			Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100;
-			Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
+			Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 400;
+			Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 200;
 			Graphics.ApplyChanges();
 
 			Window.AllowUserResizing = true;
@@ -136,6 +136,8 @@ namespace ScrapBox.Framework
 
 		protected virtual void Exit(object o, EventArgs e)
         {
+			SceneManager.CurrentScene.Unload();
+			SceneManager.CurrentScene.UnloadAssets();
 			LogService.GenerateLog();
         }
 
