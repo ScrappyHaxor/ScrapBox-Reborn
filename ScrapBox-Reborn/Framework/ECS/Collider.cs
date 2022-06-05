@@ -35,7 +35,7 @@ namespace ScrapBox.Framework.ECS
 
 		public override string Name => "Collider";
 
-		public Transform Transform;
+		public Transform2D Transform;
 		public RigidBody2D Rigidbody;
 		public Sprite2D Sprite;
 

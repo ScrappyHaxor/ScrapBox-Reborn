@@ -181,6 +181,7 @@ namespace ScrapBox.Framework.Managers
             textureRegister.Clear();
             fontRegister.Clear();
             shaderRegister.Clear();
+            soundRegister.Clear();
             content.Unload();
         }
 

@@ -2,7 +2,7 @@ using ScrapBox.Framework.Math;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-	public class Transform : Component
+	public class Transform2D : Component
 	{
 		public override string Name => "Transform";
 

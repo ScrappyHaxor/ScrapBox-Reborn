@@ -14,7 +14,7 @@ using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class Textbox : Interface
+    public class Textbox2D : Interface
     {
         public override string Name => "Textbox";
 
@@ -48,7 +48,7 @@ namespace ScrapBox.Framework.ECS.Components
 
         private double lastErase;
 
-        public Textbox()
+        public Textbox2D()
         {
             OutlineThickness = 1;
         }

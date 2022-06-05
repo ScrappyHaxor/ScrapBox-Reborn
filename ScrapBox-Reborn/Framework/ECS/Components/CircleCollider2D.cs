@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class CircleCollider : Collider
+    public class CircleCollider2D : Collider
     {
         public override string Name => "CircleCollider";
 

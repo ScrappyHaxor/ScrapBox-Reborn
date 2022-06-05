@@ -10,7 +10,7 @@ using ScrapBox.Framework.Level;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class Label : Interface
+    public class Label2D : Interface
     {
         public override string Name => "Label";
 

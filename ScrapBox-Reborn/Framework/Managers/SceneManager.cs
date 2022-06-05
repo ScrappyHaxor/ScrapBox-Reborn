@@ -124,35 +124,32 @@ namespace ScrapBox.Framework.Managers
 
         internal static void Render(double dt)
         {
-            if (CurrentScene == null)
-                return;
+            Renderer.BeginSceneRender();
 
-            if (swappingScene && LoadingScene == null)
-                return;
-
-            if (swappingScene)
+            if (swappingScene && LoadingScene != null)
             {
                 LoadingScene.PreStackRender();
                 LoadingScene.PostStackRender();
-                return;
             }
 
-            Renderer.BeginSceneRender();
+            if (!(swappingScene || CurrentScene == null))
+            {
+                CurrentScene.PreStackRender();
+                CurrentScene.PostStackRender();
 
-            CurrentScene.PreStackRender();
-            CurrentScene.PostStackRender();
+                if (Debug)
+                {
+                    RenderDiagnostics.Draw(new ScrapVector(5, 5));
+                    PhysicsDiagnostics.Draw(new ScrapVector(5, 85));
+                }
+
+                RenderDiagnostics.Calls = 0;
+                PhysicsDiagnostics.FPS = ScrapMath.Round(1 / dt);
+                currentSceneBusy = false;
+            }
+
 
             Renderer.EndSceneRender();
-
-            if (Debug)
-            {
-                RenderDiagnostics.Draw(new ScrapVector(5, 5));
-                PhysicsDiagnostics.Draw(new ScrapVector(5, 85));
-            }
-
-            RenderDiagnostics.Calls = 0;
-            PhysicsDiagnostics.FPS = ScrapMath.Round(1 / dt);
-            currentSceneBusy = false;
         }
     }
 }

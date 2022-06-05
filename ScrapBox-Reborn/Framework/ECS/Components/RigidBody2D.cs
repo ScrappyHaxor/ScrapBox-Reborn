@@ -17,7 +17,7 @@ namespace ScrapBox.Framework.ECS.Components
 		public override string Name => "Rigidbody2D";
 
 
-		public Transform Transform;
+		public Transform2D Transform;
 
 		public ScrapVector Force { get; internal set; }
 		public double Torque { get; internal set; }
@@ -63,13 +63,20 @@ namespace ScrapBox.Framework.ECS.Components
 			if (collisionSystem == null)
 				return false;
 
+			double topY = Transform.Position.X - Transform.Dimensions.X / 2;
+			double bottomY = Transform.Position.X + Transform.Dimensions.X / 2;
+			double middleY = Transform.Position.Y / 2;
 			double leftX = Transform.Position.X - Transform.Dimensions.X / 2;
-			RayResult leftCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, Transform.Position.Y / 2)));
-
 			double rightX = Transform.Position.X + Transform.Dimensions.X / 2;
-			RayResult rightCollision = collisionSystem.Raycast(new PointRay(new ScrapVector(rightX, Transform.Position.Y / 2)));
 
-			return leftCollision.hit || rightCollision.hit;
+			RayResult middleLeft = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, middleY)));
+			RayResult middleRight = collisionSystem.Raycast(new PointRay(new ScrapVector(rightX, middleY)));
+			RayResult topLeft = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, topY)));
+			RayResult topRight = collisionSystem.Raycast(new PointRay(new ScrapVector(rightX, topY)));
+			RayResult bottomLeft = collisionSystem.Raycast(new PointRay(new ScrapVector(leftX, bottomY)));
+			RayResult bottomRight = collisionSystem.Raycast(new PointRay(new ScrapVector(rightX, bottomY)));
+
+			return middleLeft.hit || middleRight.hit || topLeft.hit || topRight.hit || bottomLeft.hit || bottomRight.hit;
 		}
 
 		internal void ApplyForces(double dt, double iterations)
