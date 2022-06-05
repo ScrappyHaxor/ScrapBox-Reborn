@@ -12,7 +12,7 @@ namespace ScrapBox.Framework.ECS
 {
     public abstract class Interface : Component
     {
-        public Transform Transform;
+        public Transform2D Transform;
 
         public override void Awake()
         {

@@ -16,7 +16,7 @@ using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class Slider : Interface
+    public class Slider2D : Interface
     {
         public const int DEFAULT_HANDLE_POINTS = 22;
         public const int SLIDER_BOUND_OFFSET = 5;

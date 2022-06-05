@@ -8,12 +8,11 @@ using ScrapBox.Framework.Input;
 using ScrapBox.Framework.Math;
 using ScrapBox.Framework.Services;
 using ScrapBox.Framework.Managers;
-using ScrapBox.Framework.Diagnostics;
 using System.Collections.Generic;
 
 namespace ScrapBox.Framework
 {
-	internal class InternalGame : Game
+    internal class InternalGame : Game
     {
 		public Action Init;
 		public new Action<double> Tick;

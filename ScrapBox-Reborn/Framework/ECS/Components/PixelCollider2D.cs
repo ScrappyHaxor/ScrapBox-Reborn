@@ -2,7 +2,7 @@ using ScrapBox.Framework.Math;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-	public class PixelCollider : Collider
+	public class PixelCollider2D : Collider
 	{
 		public override ScrapVector[] GetVerticies()
 		{

@@ -153,7 +153,7 @@ namespace ScrapBox.Framework.ECS.Systems
                     if (!colliderA.Rigidbody.IsStatic)
                     {
                         //Calculate state
-                        Transform transformA = colliderA.Transform;
+                        Transform2D transformA = colliderA.Transform;
                         double bottom = transformA.Position.Y + transformA.Dimensions.Y / 2 + 1;
 
 
@@ -173,7 +173,7 @@ namespace ScrapBox.Framework.ECS.Systems
 
                     if (!colliderB.Rigidbody.IsStatic)
                     {
-                        Transform transformB = colliderB.Transform;
+                        Transform2D transformB = colliderB.Transform;
                         double bottom = transformB.Position.Y + transformB.Dimensions.Y / 2 + 1;
 
                         RayResult leftRay = Raycast(new PointRay(new ScrapVector(transformB.Position.X - transformB.Dimensions.X / 2 + 2, bottom)));

@@ -13,7 +13,7 @@ using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class Button : Interface
+    public class Button2D : Interface
     {
         public override string Name => "Button";
 
@@ -30,7 +30,7 @@ namespace ScrapBox.Framework.ECS.Components
 
         private int[] indicies;
 
-        public Button()
+        public Button2D()
         {
             OutlineThickness = 1;
         }

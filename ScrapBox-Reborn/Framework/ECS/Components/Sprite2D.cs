@@ -19,7 +19,7 @@ namespace ScrapBox.Framework.ECS.Components
 	{
         public override string Name => "Sprite2D";
 
-		public Transform Transform;
+		public Transform2D Transform;
 		public ScrapVector Position { get { if (Transform == null) return default; return Transform.Position; } }
 		public double Rotation { get { if (Transform == null) return default; return Transform.Rotation; } }
 		public Texture2D Texture { get; set; }

@@ -15,7 +15,7 @@ using Rectangle = ScrapBox.Framework.Shapes.Rectangle;
 
 namespace ScrapBox.Framework.ECS.Components
 {
-    public class Checkbox : Interface
+    public class Checkbox2D : Interface
     {
         public override string Name => "Checkbox";
 

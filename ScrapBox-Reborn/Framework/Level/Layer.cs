@@ -12,9 +12,9 @@ namespace ScrapBox.Framework.Level
     {
         public readonly string Name;
 
-        private List<Entity> entities;
-        private List<EntityCollection> collections;
-        private List<ComponentSystem> systems;
+        private readonly List<Entity> entities;
+        private readonly List<EntityCollection> collections;
+        private readonly List<ComponentSystem> systems;
 
         private bool active;
 
