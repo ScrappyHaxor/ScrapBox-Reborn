@@ -318,7 +318,15 @@ namespace ScrapBox.Framework.Services
             foreach (EffectPass pass in basic.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                batch.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, verticiesColors, 0, verticiesColors.Length, indicies, 0, indicies.Length / 3);
+
+                try
+                {
+                    batch.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, verticiesColors, 0, verticiesColors.Length, indicies, 0, indicies.Length / 3);
+                }
+                catch (Exception)
+                {
+
+                }
             }
         }
 

@@ -47,7 +47,7 @@ namespace ScrapBox.Framework
 			Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 200;
 			Graphics.ApplyChanges();
 
-			Window.AllowUserResizing = true;
+			Window.AllowUserResizing = false;
 			Window.ClientSizeChanged += new EventHandler<EventArgs>(ClientWindowSizeChanged);
 			
 			Init();
